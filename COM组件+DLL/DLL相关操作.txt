@@ -1,0 +1,152 @@
+1.获取DLL版本信息
+	#include <Windows.h>
+	#include <WinVer.h>  
+	#pragma comment (lib,"version.lib")
+
+	DWORD dwHandle = 0;
+	WCHAR szModelFilePath[MAX_PATH+1] = {0};
+//	::GetModuleFileName(NULL, szModelFilePath, MAX_PATH+1);		//current exe
+
+	::GetModuleFileName(hModule, szModelFilePath, _MAX_PATH+1);	//dll model
+
+	DWORD dwInfoSize = GetFileVersionInfoSize(szModelFilePath, &dwHandle);
+	if (dwInfoSize > 0)
+	{
+		BYTE* byVersionInfo = new BYTE[dwInfoSize];
+		if (GetFileVersionInfo(szModelFilePath, dwHandle, dwInfoSize, byVersionInfo))
+		{
+			VS_FIXEDFILEINFO* vs_file_info = NULL;
+			unsigned int size = 0;
+			VerQueryValue(byVersionInfo, L"\\", (void**)&vs_file_info, &size);
+
+			//File Version
+			WORD wFileVer[4] = {0};
+			wFileVer[0] = (vs_file_info->dwFileVersionMS >> 16 ) & 0xffff;
+			wFileVer[1] = (vs_file_info->dwFileVersionMS >>  0 ) & 0xffff;
+			wFileVer[2] = (vs_file_info->dwFileVersionLS >> 16 ) & 0xffff;
+			wFileVer[3] = (vs_file_info->dwFileVersionLS >>  0 ) & 0xffff;
+
+			//ProductVersion
+			WORD wProductVer[4] = {0};
+			wProductVer[0] = (vs_file_info->dwProductVersionMS >> 16 ) & 0xffff;
+			wProductVer[1] = (vs_file_info->dwProductVersionMS >>  0 ) & 0xffff;
+			wProductVer[2] = (vs_file_info->dwProductVersionLS >> 16 ) & 0xffff;
+			wProductVer[3] = (vs_file_info->dwProductVersionLS >>  0 ) & 0xffff;
+
+			delete[] byVersionInfo;
+		}
+	}
+	
+////////////////////////////////////////////////////////////////////////////////////
+2.获取DLL接口函数
+a）声明函数指针
+extern "C"
+{
+	typedef char* (*DLL_FUN_TYPE)();
+｝
+DLL_FUN_TYPE pFunPointer = NULL;
+
+b)加载DLL到Model
+HMODULE hModule = LoadLibrary(L".\\xxx.dll");
+if(!hModule)
+{
+	//...
+}
+
+c)函数指针赋值
+pFunPointer = (DLL_FUN_TYPE)::GetProcAddress(hModule, "DLL_Interface_Name");
+if (!pFunPointer)
+{
+	//...
+}
+
+d)释放DLL资源
+if (hModule)
+{
+	FreeLibrary(hModule);
+	pFunPointer = NULL;
+｝
+
+注意：
+!>新增Cpp文件获取DLL函数，避免头文件冲突
+!!>abc在InitInstanceDLL()中进行，d在ExitInstanceDLL()进行（自定义InitInstanceDLL/ExitInstanceDLL）
+
+////////////////////////////////////////////////////////////////////////////////////
+3.DLL 导出接口函数
+方式1：在def文件中添加要导出的函数名
+	注意：如当前DLL采用动态链接到MFC的方式，且导出的函数的确需要用到MFC的资源，需在函数实现前添加 AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+例如：
+extern "C" 
+{
+	void 函数名(函数参数)
+	{
+		//使用MFC资源前需加
+		AFX_MANAGE_STATE(AfxGetStaticModuleState());
+		
+		//使用MFC对话框资源
+		CXXXDlg dlg;
+		dlg.DoModal();
+	}
+}
+
+方式2：在函数实现前加上 __declspec(dllexport) 即可表示此函数是导出函数
+例如：
+extern "C" 
+{
+	void __declspec(dllexport) 函数名(函数参数)
+	{
+		//使用MFC资源前需加
+		AFX_MANAGE_STATE(AfxGetStaticModuleState());
+		
+		//使用MFC对话框资源
+		CXXXDlg dlg;
+		dlg.DoModal();
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+3.DLL共享数据段（不同进程加载同一路径下的DLL时，共享的数据）
+a）声明
+#pragma data_seg("Shared")        	// 声明共享数据段，并命名该数据段
+int SharedData = 0;       			// 必须在定义的同时进行初始化!!!!
+#pragma data_seg()
+
+b）设置属性
+法1：def文件中
+SETCTIONS
+    Shared READ WRITE SHARED
+
+法2：项目链接命令中
+/SECTION:Shared,rws
+
+法3：cpp文件中
+#pragma comment(linker,"/section:.Shared,rws")  // 可读，可写，进程间共享。(rws前不能有空格，Shared是数据段的名称，区分大小写)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

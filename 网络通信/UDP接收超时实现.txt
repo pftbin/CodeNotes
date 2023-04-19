@@ -1,0 +1,25 @@
+使用recv_within_time 替换recvfrom即可
+
+#define RECV_LOOP_COUNT		1//重试次数，会累加超时时间
+int recv_within_time(int fd, char *buf, size_t buf_n,int flags,struct sockaddr* addr,socklen_t *len,unsigned int sec = 0,unsigned usec = 0)
+{
+	struct timeval tv;
+	fd_set readfds;
+	unsigned int n=0;
+	for(int i=0;i<RECV_LOOP_COUNT;i++)
+	{
+		FD_ZERO(&readfds);
+		FD_SET(fd,&readfds);
+		tv.tv_sec=sec;
+		tv.tv_usec=usec;
+		select(fd+1,&readfds,NULL,NULL,&tv);
+		if(FD_ISSET(fd,&readfds))
+		{
+			if((n=recvfrom(fd,buf,buf_n,flags,addr,len))>=0)
+			{
+				return n;
+			}
+		}
+	}
+	return -1;
+}

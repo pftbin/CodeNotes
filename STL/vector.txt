@@ -1,0 +1,57 @@
+一、设定初始Vector 的Size
+
+//一维
+vector<int> obj(size);
+或
+vector<int> obj;
+obj.resize(size);
+
+//二维
+ vector<vector<int> > obj(rsize, vector<int>(lsize, 0));
+或
+vector<vector<int>> obj;
+obj.resize(rsize);
+
+for(int i = 0; i < rsize; i++)
+    obj[i].resize(lsize);
+
+注意：
+以下两种组合来防止reallocate
+【resize时vertor会被填充元素，可使用下标赋值；reserve只是改变容量，未填充元素，使用下标赋值会运行错误】
+1.先使用vector::resize()， 再使用array index赋值[替换元素值] ==》效率最高，但是需要提前知道size大小
+2.先使用vector::reserve()，再使用 push_back()赋值[插入新元素] ==》效率一般，比不使用reserve，不断push_back有提升
+	
+	
+	
+	
+//////////////////////////////////////////////////////////////////////////
+二、vector清空
+
+清除元素并回收内存：
+vector<int>().swap(vecInt);     	//清除容器并最小化其容量，借助临时vector
+int capacity = vecInt.capacity();   //0
+int size = vecInt.size();           //0
+
+清空元素，不回收空间：
+vecInt.clear();
+int capacity = vecInt.capacity();   //512
+int size = vecInt.size();           //0
+
+/////////////////////////////////////////////////////////////////////////
+三、查找元素是否存在
+
+vector<CString> m_vecLinkIDs;
+//...
+CString strLinkID;
+vector<CString>::iterator ret;
+ret = std::find(m_vecLinkIDs.begin(), m_vecLinkIDs.end(), strLinkID);
+if(ret != m_vecLinkIDs.end())
+{
+    //在vector中存在。
+}
+STL中的容器都可以这样使用
+
+/////////////////////////////////////////////////////////////////////////
+四、at和[] 的区别
+.at()会额外检查访问是否越界，如果越界，会抛出exception，所以使用.at()时程序运行速度较慢
+[]效率更高，即使下标越界，对应的内存读写到什么，就是随机事件

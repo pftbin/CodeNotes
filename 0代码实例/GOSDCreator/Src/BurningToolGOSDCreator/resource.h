@@ -1,0 +1,125 @@
+//{{NO_DEPENDENCIES}}
+// Microsoft Visual C++ generated include file.
+// Used by BurningToolGOSDCreator.rc
+//
+#define IDM_ABOUTBOX                    0x0010
+#define IDD_ABOUTBOX                    100
+#define IDS_ABOUTBOX                    101
+#define IDD_BURNINGTOOLGOSDCREATOR_DIALOG 102
+#define IDR_MAINFRAME                   128
+#define IDD_DIALOG_CREATOR              129
+#define IDD_DIALOG_PARAMETER            130
+#define IDD_DIALOG_SHOW                 131
+#define IDI_ICON1                       132
+#define IDD_DIALOG1                     133
+#define IDD_DIALOG_COLOR                133
+#define IDC_TAB                         1000
+#define IDC_BUTTON_LOAD                 1001
+#define IDC_BUTTON_GEN                  1002
+#define IDC_STATIC_SOURCE               1003
+#define IDC_STATIC_TARGET               1004
+#define IDC_BUTTON_RESET                1005
+#define IDC_EDIT_WIDTH                  1006
+#define IDC_EDIT_HEIGHT                 1007
+#define IDC_EDIT_GOSD_SIZE              1008
+#define IDC_COMBO_BIT_MODE              1009
+#define IDC_COMBO_ENABLE                1009
+#define IDC_COMBO_BIT_MODE1             1009
+#define IDC_BUTTON_PREVIEW              1010
+#define IDC_BUTTON_SET_CENTER           1010
+#define IDC_BUTTON_SAVEGOSD             1011
+#define IDC_BUTTON_CLR0                 1011
+#define IDC_BUTTON_COLOR0               1012
+#define IDC_BUTTON_CLR1                 1012
+#define IDC_BUTTON_COLOR1               1013
+#define IDC_BUTTON_CLR2                 1013
+#define IDC_BUTTON_COLOR2               1014
+#define IDC_BUTTON_CLR3                 1014
+#define IDC_BUTTON_COLOR3               1015
+#define IDC_BUTTON_APPLYGOSD            1016
+#define IDC_STATIC_DESCTEXT             1017
+#define IDC_CHECK0                      1019
+#define IDC_CHECK1                      1020
+#define IDC_CHECK2                      1021
+#define IDC_CHECK3                      1022
+#define IDC_CHECK4                      1023
+#define IDC_CHECK5                      1024
+#define IDC_CHECK6                      1025
+#define IDC_CHECK7                      1026
+#define IDC_CHECK8                      1027
+#define IDC_CHECK9                      1028
+#define IDC_CHECK10                     1029
+#define IDC_COMBO_TRIGMODE              1030
+#define IDC_COMBO_BITMODE2              1031
+#define IDC_COMBO_SCALE                 1032
+#define IDC_COMBO_BK_TIE_YUV            1033
+#define IDC_CHECK11                     1034
+#define IDC_CHECK12                     1035
+#define IDC_CHECK13                     1036
+#define IDC_CHECK14                     1037
+#define IDC_CHECK15                     1038
+#define IDC_EDIT_RES_X                  1039
+#define IDC_EDIT_RES_Y                  1040
+#define IDC_EDIT_STARTX                 1041
+#define IDC_EDIT_STARTY                 1042
+#define IDC_EDIT_SIZEW                  1043
+#define IDC_EDIT_SIZEH                  1044
+#define IDC_EDIT_Y0                     1045
+#define IDC_EDIT_U0                     1046
+#define IDC_EDIT_V0                     1047
+#define IDC_EDIT_Y1                     1048
+#define IDC_BUTTON_DRAG0                1048
+#define IDC_EDIT_U1                     1049
+#define IDC_BUTTON_DRAG1                1049
+#define IDC_EDIT_V1                     1050
+#define IDC_BUTTON_DRAG2                1050
+#define IDC_EDIT_Y2                     1051
+#define IDC_BUTTON_DRAG3                1051
+#define IDC_EDIT_U2                     1052
+#define IDC_BUTTON_EQUAL1               1052
+#define IDC_EDIT_V2                     1053
+#define IDC_BUTTON_EQUAL2               1053
+#define IDC_EDIT_Y3                     1054
+#define IDC_EDIT_U3                     1055
+#define IDC_EDIT_V3                     1056
+#define IDC_COLOR_PALETTE               1057
+#define IDC_STATIC_GROUP2               1057
+#define IDC_LUM                         1058
+#define IDC_STATIC_GROUP3               1058
+#define IDC_EDIT_R                      1059
+#define IDC_STATIC_Y2                   1059
+#define IDC_EDIT_G                      1060
+#define IDC_STATIC_U2                   1060
+#define IDC_EDIT_B                      1061
+#define IDC_STATIC_V2                   1061
+#define IDC_EDIT_Y                      1062
+#define IDC_STATIC_Y3                   1062
+#define IDC_EDIT_U                      1063
+#define IDC_STATIC_U3                   1063
+#define IDC_EDIT_V                      1064
+#define IDC_STATIC_V3                   1064
+#define IDC_BUTTON_NOWCLR               1065
+#define IDC_STATIC_COLOR0               1065
+#define IDC_STATIC_COLOR1               1066
+#define IDC_STATIC_COLOR2               1067
+#define IDC_STATIC_COLOR3               1068
+#define IDC_STATIC_GROUP0               1069
+#define IDC_STATIC_GROUP1               1070
+#define IDC_STATIC_Y0                   1071
+#define IDC_STATIC_U0                   1072
+#define IDC_STATIC_V0                   1073
+#define IDC_STATIC_Y1                   1074
+#define IDC_STATIC_U1                   1075
+#define IDC_STATIC_V1                   1076
+#define IDC_BUTTON_SAVE_GOSDPARAMETERS  1077
+
+// Next default values for new objects
+// 
+#ifdef APSTUDIO_INVOKED
+#ifndef APSTUDIO_READONLY_SYMBOLS
+#define _APS_NEXT_RESOURCE_VALUE        134
+#define _APS_NEXT_COMMAND_VALUE         32771
+#define _APS_NEXT_CONTROL_VALUE         1078
+#define _APS_NEXT_SYMED_VALUE           101
+#endif
+#endif

@@ -1,0 +1,41 @@
+#include <windows.h>
+
+static LONGLONG GetSysTimeMicros()
+{
+#define EPOCHFILETIME   (116444736000000000UL)
+	FILETIME ft;
+	LARGE_INTEGER li;
+	LONGLONG tt = 0;
+
+	GetSystemTimeAsFileTime(&ft);
+	li.LowPart = ft.dwLowDateTime;
+	li.HighPart = ft.dwHighDateTime;
+	tt = (li.QuadPart - EPOCHFILETIME) /10;
+
+	return tt;
+}
+
+使用：
+在开始和结束获取获取计数，根据差值确定时间。
+例如：
+UINT	uiTimeElapse = 500000;//500ms
+
+longlong lStartCnt = GetSysTimeMicros();
+XXX
+longlong lEndCnt = GetSysTimeMicros();
+if(lEndCnt - lStartCnt > uiTimeElapse)//间隔为500ms
+{
+XXX
+}
+
+
+2.毫秒sleep
+#include <stdio.h>
+#include <sys/select.h>
+static void sleep_ms(unsigned int secs)
+{
+    struct timeval tval;
+    tval.tv_sec=secs/1000;
+    tval.tv_usec=(secs*1000)%1000000;
+    select(0,NULL,NULL,NULL,&tval);
+}

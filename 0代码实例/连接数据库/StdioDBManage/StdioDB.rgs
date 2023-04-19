@@ -1,0 +1,26 @@
+HKCR
+{
+	StdioDBManage.StdioDB.1 = s 'StdioDB Class'
+	{
+		CLSID = s '{DD4349CC-788B-4aed-B3A3-4F3F278EECEC}'
+	}
+	StdioDBManage.StdioDB = s 'StdioDB Class'
+	{
+		CLSID = s '{DD4349CC-788B-4aed-B3A3-4F3F278EECEC}'
+		CurVer = s 'StdioDBManage.StdioDB.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {DD4349CC-788B-4aed-B3A3-4F3F278EECEC} = s 'StdioDB Class'
+		{
+			ProgID = s 'StdioDBManage.StdioDB.1'
+			VersionIndependentProgID = s 'StdioDBManage.StdioDB'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Neutral'
+			}
+			'TypeLib' = s '{1426CCA0-CD45-4BFF-928E-BD1709783892}'
+		}
+	}
+}

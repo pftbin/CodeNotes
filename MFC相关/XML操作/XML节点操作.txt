@@ -1,0 +1,17 @@
+/////////////////////////////////////////////////////////////////////
+获取XML格式指定节点内容，如<id>123</id>获取123
+CString GetXMLNodeValue(CString strXMLInfo, CString strNodeName)
+{
+	strXMLInfo.Trim();
+	CString strItemValue = _T("");
+	CString strNodeStart; strNodeStart.Format(_T("<%s>"), strNodeName);
+	CString strNodeEnd; strNodeEnd.Format(_T("</%s>"), strNodeName);
+	int nPos0 = strXMLInfo.Find(strNodeStart);
+	int nPos1 = strXMLInfo.Find(strNodeEnd);
+	if (nPos0 != -1 && nPos1 != -1 && nPos1 > nPos0)
+	{
+		int nOffset = strNodeName.GetLength();
+		strItemValue = strXMLInfo.Mid(nPos0 + nOffset + 2, nPos1 - nPos0 - nOffset - 2);
+	}
+	return strItemValue;
+}

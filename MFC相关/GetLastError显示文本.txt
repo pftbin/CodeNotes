@@ -1,0 +1,49 @@
+#include <windows.h>
+#include <stdio.h>
+#include <lmerr.h>
+
+CString DisplayErrorText(DWORD dwLastError)
+{
+	HMODULE hModule = NULL; //default to system source
+	DWORD dwFormatFlags = FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_IGNORE_INSERTS|FORMAT_MESSAGE_FROM_SYSTEM;
+
+	// If dwLastError is in the network range,load the message source
+	if (dwLastError >= NERR_BASE && dwLastError <= MAX_NERR)
+	{
+		hModule = LoadLibraryEx(TEXT("netmsg.dll"),NULL,LOAD_LIBRARY_AS_DATAFILE);
+		if(hModule != NULL)
+			dwFormatFlags != FORMAT_MESSAGE_FROM_HMODULE;
+	}
+
+	// Call FormatMessage() to allow for message text to be acquired from the system or from the supplied module handle
+	CString strMessage = _T("DisplayError: ");
+	LPSTR MessageBuffer = NULL;DWORD dwBufferLength = 0;
+	if(dwBufferLength = FormatMessageA(dwFormatFlags,hModule,dwLastError,MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),(LPSTR) &MessageBuffer,0,NULL))
+	{
+		// Output message string on stderr
+		DWORD dwBytesWritten = 0;
+		WriteFile(GetStdHandle(STD_ERROR_HANDLE),MessageBuffer,dwBufferLength,&dwBytesWritten,NULL);
+
+		//save to cstring
+		int charLen = strlen(MessageBuffer);									//计算char *数组大小，以字节为单位，一个汉字占两个字节
+		int len = MultiByteToWideChar(CP_ACP,0,MessageBuffer,charLen,NULL,0);	//计算多字节字符的大小，按字符计算。
+		TCHAR *buf = new TCHAR[len + 1];										//为宽字节字符数组申请空间，数组大小为按字节计算的多字节字符大小
+		MultiByteToWideChar(CP_ACP,0,MessageBuffer,charLen,buf,len);			//多字节编码转换成宽字节编码
+		buf[len] = '\0';														//添加字符串结尾，注意不是len+1
+		strMessage.Append(buf);													//将TCHAR数组转换为CString
+		delete []buf;															//删除缓冲区
+
+		// Free the buffer allocated by the system 
+		LocalFree(MessageBuffer);
+	}
+	else
+	{
+		strMessage += _T("Parse error code failed");
+	}
+
+	// If we loaded a message source,unload it
+	if(hModule != NULL)
+		FreeLibrary(hModule);
+
+	return strMessage;
+}

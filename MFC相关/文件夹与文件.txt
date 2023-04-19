@@ -1,0 +1,376 @@
+CSIDL_ADMINTOOLS                 '（用户）\开始菜单\程序\系统管理工具
+CSIDL_ALTSTARTUP                 '未本地化的启动
+CSIDL_APPDATA                    '（用户）\应用程序的数据
+CSIDL_BITBUCKET                  '（桌面）\回收站
+CSIDL_CONTROLS                   '我的电脑\控制面板
+CSIDL_COOKIES 
+CSIDL_DESKTOP                    '桌面
+CSIDL_DESKTOPDIRECTORY           '（用户）\桌面
+CSIDL_FAVORITES                  '（用户）\个性化设置
+CSIDL_FONTS                      'windows\字体
+CSIDL_HISTORY 
+CSIDL_INTERNET                   'IE（桌面上的图标
+CSIDL_INTERNET_CACHE             '因特网缓存文件夹
+CSIDL_LOCAL_APPDATA              '（用户）\本地设置\应用程序数据
+CSIDL_DRIVES                     '我的电脑
+CSIDL_MYPICTURES                 'C:\Program Files\My Pictures
+CSIDL_NETHOOD                    '（用户）\网上邻居中的元素
+CSIDL_NETWORK                    '网上邻居
+CSIDL_PRINTERS                   '我的电脑\打印机
+CSIDL_PRINTHOOD                  '（用户）\打印机连接
+CSIDL_PERSONAL                   '我的文档
+CSIDL_PROGRAM_FILES              'C:\Program Files
+CSIDL_PROGRAM_FILESX86           'x86 apps (Alpha)的程序文件目录
+CSIDL_PROGRAMS                   '开始菜单\程序
+CSIDL_PROGRAM_FILES_COMMON       'Program Files\Common
+CSIDL_PROGRAM_FILES_COMMONX86    'RISC上的x86 \Program Files\Common
+CSIDL_RECENT                     '(用户)\最近记录目录
+CSIDL_SENDTO                     '(用户)\发送到目录
+CSIDL_STARTMENU                  '(用户)\开始菜单
+CSIDL_STARTUP                    '开始菜单\程序\启动
+CSIDL_SYSTEM                     'system文件夹
+CSIDL_SYSTEMX86                  'x86 apps (Alpha)的system文件夹
+CSIDL_TEMPLATES 
+CSIDL_PROFILE                    '用户概貌文件夹
+CSIDL_WINDOWS                    'Windows目录或SYSROOT()
+CSIDL_COMMON_ADMINTOOLS          '（所有用户）\开始菜单\程序\系统管理工具
+CSIDL_COMMON_ALTSTARTUP          '未本地化的通用启动
+CSIDL_COMMON_APPDATA             '（所有用户）\应用程序数据
+CSIDL_COMMON_DESKTOPDIRECTORY  '（所有用户）\桌面
+CSIDL_COMMON_DOCUMENTS           '（所有用户）\文档
+CSIDL_COMMON_FAVORITES           '(所有用户)\设置
+CSIDL_COMMON_PROGRAMS            '(所有用户)\程序
+CSIDL_COMMON_STARTMENU           '(所有用户)\开始菜单
+CSIDL_COMMON_STARTUP             '(所有用户)\启动
+CSIDL_COMMON_TEMPLATES           '(所有用户)\临时
+
+//当前App所在文件夹
+CString strAppForder;
+_TCHAR szNowModulePath[MAX_PATH] = {0};
+GetCurrentDirectory(MAX_PATH,szNowModulePath);
+strAppForder = szNowModulePath;
+//
+CString GGetAppPath()
+{
+	TCHAR exeFullName[MAX_PATH]={0};
+	::GetModuleFileName(AfxGetInstanceHandle(),exeFullName,MAX_PATH);
+	CString mPath=exeFullName;
+
+	int mPos=mPath.ReverseFind(_T('\\'));  
+
+	if(mPos==-1)return _T("");	//没有发现
+
+	mPath=mPath.Left(mPos);
+
+	if(mPath.Right(1)==_T("\\"))
+	{
+		mPath=mPath.Left(mPos-1);
+	}
+	return mPath;
+}
+
+//设置当前工作目录
+	CString AppFolder;
+	AppFolder.Format(_T("%s"), GetAppFolder());
+	SetCurrentDirectory(AppFolder);
+
+	TCHAR szCurDirectory[MAX_PATH] = { 0 };
+	GetCurrentDirectory(MAX_PATH, szCurDirectory);
+	CString strCurDirectory; strCurDirectory = szCurDirectory;
+	CString strLogInfo;strLogInfo.Format(_T("当前进程工作目录 %s"), strCurDirectory);
+
+//一次创建多层文件夹
+if (!::PathFileExists(strDirectoryPath))
+{
+	::SHCreateDirectoryEx(NULL, strDirectoryPath, NULL);
+}
+
+
+::PathFileExists      			 可判断文件夹/文件是否存在
+1.获取系统文件夹(Windows系统)
+	CFile fileAppInfo;
+	CString strFileName;
+	TCHAR szAppInfo[MAX_PATH + 1] = {0};
+
+	memset(szAppInfo, 0, ((MAX_PATH + 1) * sizeof(TCHAR)));
+	strFileName = _T("MyFile.txt");
+
+	::SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, szAppInfo);
+	::PathAppend(szAppInfo, _T("MyFolder"));
+	if (!::PathFileExists(szAppInfo))
+	{
+		::CreateDirectory(szAppInfo, NULL);
+	}
+
+	::PathAppend(szAppInfo, strFileName);
+	if (!::PathFileExists(szAppInfo))
+	{
+		if (fileAppInfo.Open(szAppInfo, CFile::modeCreate|CFile::modeWrite|CFile::typeBinary|CFile::shareDenyNone))
+		{
+			WORD wUnicodeFlag = 0;
+			wUnicodeFlag = 0xFEFF;
+			fileAppInfo.Write(&wUnicodeFlag, sizeof(wUnicodeFlag));
+			fileAppInfo.Close();
+		}
+	}
+
+
+2.遍历文件夹的指定后缀文件
+	CString strFolderPath = szBuffer;
+	if (GetFileAttributes(strFolderPath) == FILE_ATTRIBUTE_DIRECTORY)//is folder
+	{
+		int nCount = 0;
+		CString strFullFileName = _T("");
+
+		WIN32_FIND_DATA findFileData;
+		HANDLE hFound = FindFirstFile(strFolderPath + _T("\\*.csv"),&findFileData);
+		if (hFound != INVALID_HANDLE_VALUE )
+		{
+			strFullFileName = findFileData.cFileName;
+			m_mapWinCfgScalerFiles[nCount++] = strFullFileName;
+		}
+		while(FindNextFile(hFound,&findFileData))
+		{
+			strFullFileName = findFileData.cFileName;
+			m_mapWinCfgScalerFiles[nCount++] = strFullFileName;
+		}
+		m_nWinConfigScalerFileCnt = nCount;
+	}
+
+3.获取文件大小（字节数）
+//A
+ULONGLONG size;
+CString strFilePath;
+CFileStatus fileStatus;
+if (CFile::GetStatus(strFilePath, fileStatus))
+{
+	size = fileStatus.m_size;
+}
+//B
+ULONGLONG ulFW1Size = 0;
+CFile FW1File;
+BYTE pBuffer = NULL;
+if (FW1File.Open(strFilePath, CFile::modeRead, NULL))
+{
+	ulFW1Size = FW1File.GetLength();
+	pBuffer = new BYTE[ulFW1Size];
+	FW1File.Read(pBuffer, ulFW1Size);
+}
+FW1File.Close();
+
+4.修改文本文件
+CStdioFile File;
+if(File.Open(strFilePath,CFile::typeText|CFile::modeReadWrite))
+{
+	CString strLine;
+	while(File.ReadString(strLine))
+	{
+		if (1)
+		{
+			File.Seek(0,CFile::current);
+			File.WriteString(strLine);
+			break;
+		}
+	}
+}
+File.Close();
+
+5.文件的复制，移动，删除，更名
+
+复制文件
+BOOL CopyFile(LPCTSTR lpExistingFileName, LPCTSTR lpNewFileName, BOOL bFailIfExists);
+bFailIfExists用来制定如果目标文件已经存在时，是否中止复制操作，返回FALSE。
+例，把"d://1.txt"复制到"d://2.txt"，即使"d://2.txt"已经存在。
+BOOL bRet = CopyFile(_T("d://1.txt"), _T("d://2.txt"), FALSE);
+
+移动文件
+BOOL MoveFile( LPCTSTR lpExistingFileName, LPCTSTR lpNewFileName );
+这个函数可以移一个文件，或目录（包括子目录），例，
+MoveFile(_T("d://1.txt"), _T("d://2.txt"));
+
+下面的API带着选项dwFlags ，移动文件，或目录（包括子目录）。
+BOOL MoveFileEx( LPCTSTR lpExistingFileName, LPCTSTR lpNewFileName, DWORD dwFlags );
+
+dwFlags的意义： 
+MOVEFILE_REPLACE_EXISTING 如果目标文件存在是否替代它 。
+MOVEFILE_DELAY_UNTIL_REBOOT 文件移动准备，下次启动系统时执行移动作业。
+
+删除目录的子文件/文件夹
+void RecursiveDelete(CString strFolderPath)
+{
+	CFileFind filefind;
+	CString strForder = strFolderPath;
+	if (strForder.Right(1) != "\\")//Folder last char is '\' 
+		strForder += "\\";
+
+	CString strFilePath = strForder + _T("*.*");//all type file
+	BOOL bFind = filefind.FindFile(strFilePath);
+	while (bFind)
+	{
+		bFind = filefind.FindNextFile();
+		if (!filefind.IsDots() && !filefind.IsDirectory())	//File
+			DeleteFile(filefind.GetFilePath());
+		else if (filefind.IsDots())							//is '.' Dir
+			continue;
+		else if (filefind.IsDirectory())					//Dir
+		{
+			strFilePath = filefind.GetFilePath();
+			RecursiveDelete(strFilePath);					//delete child file
+			RemoveDirectory((LPCTSTR)strFilePath);			//delete empty Dir
+		}
+	}
+}
+
+删除文件
+BOOL DeleteFile( LPCTSTR lpFileName );
+static void PASCAL CFile::Remove(LPCTSTR lpszFileName);
+
+文件更名
+CFile::Rename(pOldName, pNewName);
+
+获取文件名
+CString aaa = "C:/test\\aaa\\bbb.txt";
+aaa.Replace("\\", "/");
+CString fileName = aaa.Left(aaa.GetLength()-aaa.ReverseFind('/')); //获取文件夹
+CString fileName = aaa.Right(aaa.GetLength()-aaa.ReverseFind('/')-1); //获取到bbb.txt
+CString firstFileName = fileName.Left(fileName.Find('.')); //去除后缀获取到bbb
+
+6.一次打开多个文件
+CArray<CString, CString> arImagePath;
+CString strFileFilter = _T("bmp Files (*.bmp;*.BMP;)|*.bmp;|r10 Files (*.r10;*.R10;)|*.r10||");
+UINT nOpenFlags = OFN_HIDEREADONLY|OFN_NOCHANGEDIR|OFN_FILEMUSTEXIST|OFN_ALLOWMULTISELECT;//允许多选
+CFileDialog fileDlg( TRUE, NULL, NULL, nOpenFlags, strFileFilter, this);//TRUE==打开;FALSE==保存
+
+//New buffer for filePath string
+fileDlg.m_ofn.nMaxFile = MAX_PATH * (DF_MAX_COUNT+1);
+TCHAR* pFilePathBuffer = new TCHAR[fileDlg.m_ofn.nMaxFile];
+fileDlg.m_ofn.lpstrFile = pFilePathBuffer;
+ZeroMemory(fileDlg.m_ofn.lpstrFile,sizeof(TCHAR) * fileDlg.m_ofn.nMaxFile);
+
+if (fileDlg.DoModal() == IDOK)
+{
+	switch (fileDlg.m_ofn.nFilterIndex)       
+	{
+		case 1://bmp
+			break;
+		case 2://r10
+			break;
+		default:
+			break;
+	}
+	
+	POSITION posFile = fileDlg.GetStartPosition();
+	while(posFile!=NULL)
+	{
+		CString strFilePath = fileDlg.GetNextPathName(posFile)；
+		arImagePath.Add(strFilePath);
+	}
+}
+delete pFilePathBuffer;
+
+Ex:选择单个文件
+	CString strFilter = _T("Ini Files (*.ini;)|*.ini||");
+	UINT nOpenFlags = OFN_HIDEREADONLY|OFN_NOCHANGEDIR|OFN_FILEMUSTEXIST;
+	CFileDialog fileDlg(TRUE, NULL, NULL, nOpenFlags, strFilter,this);
+	fileDlg.m_ofn.lpstrTitle = _T("Import File");
+	fileDlg.m_ofn.lpstrInitialDir = _T(".\\");
+	if (IDOK == fileDlg.DoModal())
+	{
+		m_strCreatorConfig = fileDlg.GetPathName();
+	}
+
+Ex：打开文件或程序
+#include <shellapi.h>
+ShellExecute(父窗口,_T("open"),文件路径,执行Exe时传入参数否则为NULL,默认路径,SW_SHOWNORMAL);
+例如：
+ShellExecute(NULL,_T("open"),_T("C:\Windows\1.txt"),NULL,NULL,SW_SHOWNORMAL);
+
+Ex：浏览/选择 文件夹
+
+	BROWSEINFO browInfo;
+	ZeroMemory(&browInfo,sizeof(BROWSEINFO));
+	browInfo.hwndOwner = GetSafeHwnd(); 
+	browInfo.lpszTitle = _T("Select Directory");
+	browInfo.ulFlags = BIF_RETURNFSANCESTORS;
+	browInfo.lpfn = BrowseCallbackProc;//回调函数用于指明初始目录,不指定初始目录此项不设置/设为NULL
+	
+	LPITEMIDLIST lpIDList = SHBrowseForFolder(&browInfo);
+	if(lpIDList == NULL)
+		return;
+	CString strForderPath;
+	SHGetPathFromIDList(lpIDList, strForderPath.GetBuffer(MAX_PATH));
+	strForderPath.ReleaseBuffer();
+	
+TCHAR szInitDirectory[MAX_PATH] = {_T("C:\\")};//default C
+static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)//静态回调函数
+{
+	if(uMsg == BFFM_INITIALIZED)
+	{
+		lParam;lpData;
+		::SendMessage(hwnd,BFFM_SETSELECTION,(LPARAM)TRUE,(LPARAM)szInitDirectory);
+	}
+	return 0;  
+}
+
+
+7.保存bmp文件
+#define DF_PIXEL_BYTE_COUNT				3
+
+HRESULT C_CNNToolFunction::SaveImageFile(CString strOutputFilePath, BYTE *pBuffer, LONG lWidth, LONG lHeight)
+{
+	HRESULT hr = S_OK;
+
+	if (pBuffer == NULL)
+	{
+		hr = E_UNEXPECTED;
+		return hr;
+	}
+
+	LONG lBufferSize = lWidth * lHeight * DF_PIXEL_BYTE_COUNT;
+
+	BITMAPINFOHEADER bitmapInfoHeader;
+	bitmapInfoHeader.biSize = 40;
+	bitmapInfoHeader.biWidth = lWidth;
+	bitmapInfoHeader.biHeight = lHeight;
+	bitmapInfoHeader.biPlanes = 1;
+	bitmapInfoHeader.biBitCount = 8 * DF_PIXEL_BYTE_COUNT;
+	bitmapInfoHeader.biCompression = BI_RGB;
+	bitmapInfoHeader.biSizeImage = lBufferSize;
+	bitmapInfoHeader.biXPelsPerMeter = 0;
+	bitmapInfoHeader.biYPelsPerMeter = 0;
+	bitmapInfoHeader.biClrUsed = 0;
+	bitmapInfoHeader.biClrImportant = 0;
+
+	BITMAPFILEHEADER bitmapFileHeader;
+	bitmapFileHeader.bfType = 0x4D42;
+	bitmapFileHeader.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + lBufferSize;
+	bitmapFileHeader.bfReserved1 = 0;
+	bitmapFileHeader.bfReserved2 = 0;
+	bitmapFileHeader.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+
+	FILE *pFile = NULL;
+	_wfopen_s(&pFile, strOutputFilePath, _T("w+b"));
+	if (pFile == NULL)
+	{
+		hr = E_FAIL;
+		return hr;
+	}
+	fwrite(&bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, pFile);
+	fwrite(&bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, pFile);
+	UINT nFixedWidthSize = C_CNNToolFunction::GetFixedBMPWidthSize(bitmapInfoHeader.biWidth, DF_PIXEL_BYTE_COUNT);
+	for (int i = 0; i < bitmapInfoHeader.biHeight; i++)
+	{
+		fwrite(pBuffer + nFixedWidthSize * i, nFixedWidthSize, sizeof(BYTE), pFile);
+	}
+	fclose(pFile);
+
+	return hr;
+}
+
+8.更改当前工作目录为exe所在目录
+
+
+
+
+
+

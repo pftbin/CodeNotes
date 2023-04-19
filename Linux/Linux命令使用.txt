@@ -1,0 +1,521 @@
+ls 	文件列表  
+	-a 所有文件 
+	-l 查看权限信息 
+tree 显示文件和目录由根目录开始的树形结构
+
+	
+	
+cd 		切换目录
+pwd		显示当前目录
+
+//-p表示递归
+mkdir	创建目录
+rmdir	删除目录
+
+//-r表示递归
+cp		复制
+rm		删除
+mv		移动
+
+//创建一个空文件/目录 或者更新atime、mtime、ctime
+atime（Access Time）：文件最近被访问时间
+mtime（Modify Time）：文件最近内容修改时间
+ctime（Change Time）：文件最近权限和属性修改时间
+
+touch [-acfm][-d<日期时间>][-r<参考文件或目录>] [-t<日期时间>][--help][--version][文件或目录…]
+
+//挂载win共享文件夹
+		mount -t  cifs   //192.168.1.103/share【windows共享文件夹】 /home/baiyin/mywinshare【要挂载的目录】     
+		-o username="2832893880@qq.com",password="password",vers=2.0
+		注意：
+		1.安装 cifs ：sudo apt install cifs-utils
+		2.使用root挂载
+
+Linux 磁盘管理常用三个命令为 df、du 和 fdisk。
+		df（英文全称：disk free）：列出文件系统的整体磁盘使用量  -h 查看当前已挂载的设备
+		du（英文全称：disk used）：检查磁盘空间使用量
+		fdisk：用于磁盘分区
+
+//Linux文件内容查看
+		cat  由第一行开始显示文件内容
+		tac  从最后一行开始显示，可以看出 tac 是 cat 的倒着写！
+		nl   显示的时候，顺道输出行号！
+		more 一页一页的显示文件内容
+		less 与 more 类似，但是比 more 更好的是，他可以往前翻页！
+		head 只看头几行
+		tail 只看尾几行
+//命令模式下
+		gg 		跳转到文件头【按两下g】
+		Shift+g 跳转到文件末尾【G】
+
+
+
+
+打包、压缩命令
+		zip 要压缩的文件（压缩为zi格式）
+		unzip 要解压的文件 （解压zip格式的文件）
+		gzip 要压缩的文件（压缩成gz类型）
+		gunzip 要解压的文件（解压gz格式的文件）
+
+tar 打包命令
+		-c：创建一个新tar文件
+		-v：显示运行过程的信息
+		-f：指定文件名
+		-z：调用gzip压缩命令进行压缩
+		-t：查看压缩文件的内容
+		-x：解开tar文件
+	
+tar -zcvf 文件名... （将所有文件打包使用gzip压缩）
+tar -zxvf 文件名... （将所有文件解压）
+
+
+二、系统操作类
+1、开关机
+		shutdown -h[关机] -r[重启] 设置延迟时间或关机时间
+		立即关机： shutdown -h now
+		10分钟后关机：shutdown -h +10
+		23:30分关机：shutdown -h 23:30
+		立即关闭计算机：poweroff
+		立即重启： shutdown -r now
+		立即重启计算机：reboot
+		注销：logout 
+		
+2、显示时间类
+		date（查看或设置当前系统的时间：格式化显示时间：+%Y--%m--%d）
+		date -s（设置当前系统的时间）
+		cal [月] [年]（查看日历）显示当月的日历
+		cal 4 2004 ：显示2004年4月的日历
+		uptime （查看系统运行时间）
+
+3、网络、进程类
+		ifconfig （查看网卡信息） -ens33（当前网卡） -lo（本机回环地址127.0.0.1）
+		ps -ef （查看正在运行的进程）
+		kill -9[强制杀] pid （杀进程）
+		ping ip 查看与某台机器的连接情况
+		netstat 查看当前网络状态
+		
+4.资源监测命令
+		top -d[间隔number秒刷新一次] 秒数 （监控linux的系统状况）
+		free命令：用于查看系统内存，虚拟内存（交换空间）的大小占用情况
+		dmesg：显示系统诊断信息、操作系统版本号、物理内存的大小以及其它信息
+		uname 系统名 
+			-r ：显示操作系统的发行版号
+			-a ：显示系统名、节点名称、操作系统的发行版号、内核版本等等
+		lscpu  显示cpu的相关信息
+		lsblk  显示磁盘相关信息
+
+5.service服务管理
+		service iptables status --查看iptables服务的状态
+		service iptables start --开启iptables服务
+		service iptables stop --停止iptables服务
+		service iptables restart --重启iptables服务
+6、其他类
+		ctrl+r：历史记录中所搜命令（输入命令中的任意一个字符）；
+		ctrl+c :终止当前的命令
+		ctrl + l：清屏
+		who 或 w：查看当前系统中有哪些用户登录
+
+
+//切换用户
+		su			切换到root
+		su+用户名 	切换到指定用户
+
+//-R    递归设置目录下所有文件（如果是目录的话）
+chown	更改文件属主
+chgrp	更改文件属组 
+chmod	更改文件自身属性（rwx）
+		权限【属主+属组+其他】（u+g+o）
+		例：chmod u=rwx,g=rx,o=r  test1 
+		
+		
+
+//grep 筛选命令
+	grep "aaronkilik" /etc/passwd   筛选文件内容
+	ls -a | grep "baiyin"			筛选命令输出
+==
+-E 表示采用正则表达式进行匹配
+-o 表示只输出匹配到的部分
+
+
+//硬链接（引用）
+ln file1 file2 //file2是file1的硬链接
+//软链接（快捷方式）
+ln -s file1 file2 //file2是file1的软链接
+
+
+useradd		添加用户  -d 目录 指定用户主目录，如果此目录不存在，则同时使用-m选项，可以创建主目录
+userdel		删除用户  -r，它的作用是把用户的主目录一起删除
+usermod		修改用户属性，如主目录、用户组等
+passwd		修改密码，超级用户可修改其他用户密码
+
+groupadd	添加用户组
+groupdel	删除用户组
+groupmod	修改用户组属性
+newgrp		用户属于多个用户组，在登录后切换用户组，获取不同权限
+
+/etc/passwd文件		每个用户都在/etc/passwd文件中有一个对应的记录行，记录着 【用户名:口令:用户标识号:组标识号:注释性描述:主目录:登录Shell】
+
+>			重定向，替换原内容			
+>>			重定向，追加在原内容后
+
+
+
+
+
+vim 的使用
+命令模式：
+	i 切换到输入模式，以输入字符。
+	: 切换到底线命令模式，以在最底一行输入命令
+	x 删除当前光标所在处的字符。
+
+输入模式：
+[Ctrl] + [f]		屏幕『向下』移动一页，相当于 [Page Down]按键 (常用)
+[Ctrl] + [b]		屏幕『向上』移动一页，相当于 [Page Up] 按键 (常用)
+0 或功能键[Home]	这是数字『 0 』：移动到这一行的最前面字符处 (常用)
+$ 或功能键[End]		移动到这一行的最后面字符处(常用)
+G					移动到这个档案的最后一行(常用)
+gg					移动到这个档案的第一行，相当于 1G 啊！ (常用)
+
+底线命令模式：
+	q 退出程序
+	w 保存文件
+
+
+注意：
+误按CTRL+S处理：CTRL-S会阻塞所有的输入，解决方式为CTRL-Q
+
+===========================================================================================
+
+Shell 教程
+
+#!/bin/bash     指此脚本使用  /bin/bash 来解释执行
+				bash只是shell的一种，还有很多其它shell，如：sh,csh,ksh,tcsh
+				只能放在第一行，如果后面还有#!，那么只能看成是注释
+				
+Shell 注释
+//单行注释
+#开头
+//多行注释
+:<<EOF
+......
+EOF
+			
+//变量			
+myUrl="https://www.google.com"		//定义变量
+注意：单引号内无法直接使用变量，要使用需用单引号包裹【name="baiyin" sayname='my name is '$name' '】，此时内部单引号不输出
+	  双引号可和单引号相同用法，同样内部双引号不会输出；但双引号可直接用变量【name="baiyin" sayname="my name is ${name} "】
+
+readonly myUrl						//变量为只读，只读变量的值不能被改变
+echo $myUrl							//echo打印出变量，$表示使用变量
+unset myUrl							//删除变量	
+echo -e "OK! \n" 					//-e 开启转义,否则\n会原样输出
+echo -e "OK! \c" 					//-e 开启转义;\c 表示不换行，与下一个echo的内容一起输出
+
+改变输出颜色：COLOR + 内容 + COLOR_END
+自定义COLOR+COLOR_END
+COLOR="\033[40;31m"		//40是背景色（40-47），31是字体颜色（30-37）
+COLOR_END="\033[0m"
+
+
+
+
+read -p "键盘输入一个值:"var		//-p 输出提示信息，read从键盘读取值赋给var
+read 选项
+-a		//将内容读入到数组中
+-d		//定义结束符，read -d abc：读到a、b、c字符之一则不再读后面的值
+-e		//
+-n		//限定总共读取的字符数量
+-p		//提示信息
+-r		//
+-t		//限定等待输入的时间（秒），超时则继续执行下面的脚本
+-s		//
+
+//获取字符串长度
+string="abcd"
+echo ${#string}   //输出 4 ，${#string} 等价于 ${#string[0]}
+或
+expr length "$string"
+
+//提取子字符串
+string="0123456"
+echo ${string:1:4} // 输出 1234
+
+//查找子字符串
+查找字符 i 或 o 的位置(哪个字母先出现就计算哪个)：
+string="runoob is a great site"
+echo `expr index "$string" io`  # 输出 4
+注意： 
+1.以上脚本中 ` 是反引号[ESC下面那个键]，而不是单引号 '
+2.expr 命令表示后面是 表达式（函数/计算式）
+	a：表达式要被 ` ` 包含或使用 $，【num=`expr 2 \* 2`】等价于【num=4】等价于【num=$(expr 2 \* 2)】//乘号(*)前边必须加反斜杠(\)才能实现乘法运算
+	b：``可包含命令，但$不行，比如：echo `date` 可打印出日期；echo $(expr date)不行
+
+//变量内容截取
+=============================================
+var=http://www.aaa.com/123.htm
+
+//#，左边开始，删除第一个 "//" 左边的内容
+${var#*//}	,即 www.aaa.com/123.htm	
+
+//##，左边开始，删除最后一个 "/" 左边的内容
+${var##*/}	,即 123.htm
+
+//% ，右边开始，删除第一个 "//" 右边的内容
+${var%*//}	,即 http:
+
+//%% ，右边开始，删除最后一个 "/" 右边的内容
+${var%%*/}	,即 http:/
+
+====
+//从左边第1个字符开始，取5个字符
+${var:0:5}
+//从左边第5个字符开始，一直到结束
+${var:5}
+
+====
+//从右边第1个字符开始，取5个字符
+${var:0-5}
+//从右边第1个字符开始，取5个字符，再取前3个字符
+${var:0-5:3}
+
+=============================================
+//Shell 传递参数
+执行 Shell 脚本时，向脚本传递参数
+//1
+$0 代表shellw文件名；$1为脚本第一个参数，$2为脚本第二个参数……
+//2
+$#	传递的参数个数
+$*  传递的所有参数，可用echo "$*" 打印出来
+
+
+
+//数组
+1.定义
+=============================================
+数组名=(值1 值2 ... 值n)
+
+或
+
+数组名=(
+值1
+值2 
+...
+值n
+)
+
+数组名[0]=值1
+
+2.读取
+=============================================
+//打印第一个元素值
+echo ${array_name[0]}
+
+//打印整个数组的值 	
+echo ${array_name[@]}	
+		
+//取得数组元素的个数
+${#array_name[@]}  或者 ${#array_name[*]}
+
+//取得数组单个元素的长度
+${#array_name[n]}				
+
+3.条件表达式
+=============================================
+a：条件表达式要放在方括号之间，并且要有空格，例如: [$a==$b] 是错误的，必须写成 [ $a == $b ]  
+b: then 另起一行的话 then 前不需要加 ; 否则需要在 then 前加 ; 
+if [ $a -eq $b ];then
+c: [...] 和 ((...)) 等价
+
+
+==
+if [ $a -eq $b ]
+then
+	echo "a 等于 b"
+else
+	echo "a 不等于 b"
+fi
+
+===数值测试===
+-eq			等于
+-ne			不等于
+-gt			大于
+-ge			大于等于
+-lt			小于
+-le			小于等于
+
+===字符串测试===
+=			等于
+!=			不相等
+-z 字符串	字符串的长度为零
+-n 字符串	字符串的长度不为零
+$字符串变量	字符串是否不为空，[ $a ] 返回 true。
+
+===文件测试===
+-e 文件名	文件存在
+-r 文件名	文件存在且可读
+-w 文件名	文件存在且可写
+-x 文件名	文件存在且可执行
+-s 文件名	文件存在且至少有一个字符
+-d 文件名	文件存在且为目录
+-f 文件名	文件存在且为普通文件
+-c 文件名	文件存在且为字符型特殊文件
+-b 文件名	文件存在且为块特殊文件
+
+注意：
+与( -a )、或( -o )、非( ! )三个逻辑操作符用于将测试条件连接起来
+
+
+  
+
+
+
+
+4.布尔运算符
+=============================================
+下表列出了常用的布尔运算符，假定变量 a 为 10，变量 b 为 20：
+!	非运算，表达式为 true 则返回 false，否则返回 true。	[ ! false ] 返回 true。
+-o	或运算，有一个表达式为 true 则返回 true。	[ $a -lt 20 -o $b -gt 100 ] 返回 true。
+-a	与运算，两个表达式都为 true 才返回 true。	[ $a -lt 20 -a $b -gt 100 ] 返回 false。
+
+注意：
+EQ 就是 EQUAL					等于
+NE 就是 NOT EQUAL				不等于 
+GT 就是 GREATER THAN			大于　 
+LT 就是 LESS THAN				小于 
+GE 就是 GREATER THAN OR EQUAL 	大于等于 
+LE 就是 LESS THAN OR EQUAL 		小于等于
+
+5.逻辑运算符
+=============================================
+command1 && command2     #命令1执行成功后，命令2才执行
+command1 || command2     #命令1执行失败后，命令2才执行
+注意: 主要用于连接两条命令，不能通过中括号来连接两个测试条件。
+
+
+6.for循环
+=============================================
+for var in item1 item2 ... itemN
+do
+    command1
+    command2
+    ...
+    commandN
+done
+
+写成一行：
+for var in item1 item2 ... itemN; do command1; command2… done;
+
+==
+for i in 1 2 3 4 5  //for i in `seq 1 5`
+do
+    echo "The value is: $i"
+done
+
+7.while循环
+=============================================
+while condition
+do
+    command
+done
+
+==
+int=1
+while(( $int<=5 ))
+do
+    echo $int
+    let "int++"
+done
+
+注： let 命令，它用于执行一个或多个表达式，变量计算中不需要加上 $ 来表示变量
+
+==
+while循环可用于读取键盘信息。下面的例子中，输入信息被设置为变量FILM，按<Ctrl-D>结束循环。
+实例
+echo '按下 <CTRL-D> 退出'
+echo -n '输入你最喜欢的网站名: '
+while read FILM
+do
+    echo "是的！$FILM 是一个好网站"
+done
+
+
+8.until 循环
+=============================================
+until 循环执行一系列命令直至条件为 true 时停止； while 循环在处理方式上刚好相反
+until condition
+do
+    command
+done
+
+==
+a=0
+until [ ! $a -lt 10 ] #a值小于10会进入循环
+do
+   echo $a
+   a=`expr $a + 1`
+done
+
+9.case语句
+=============================================
+case 变量 in
+值1)
+    command1
+    command2
+    ...
+    commandN
+    ;;
+值2)
+    command1
+    command2
+    ...
+    commandN
+    ;;
+esac
+
+==
+echo '输入 1 到 4 之间的数字:'
+echo '你输入的数字为:'
+read aNum
+case $aNum in
+    1)  echo '你选择了 1'
+    ;;
+    2)  echo '你选择了 2'
+    ;;
+    3)  echo '你选择了 3'
+    ;;
+    4)  echo '你选择了 4'
+    ;;
+    *)  echo '你没有输入 1 到 4 之间的数字'
+    ;;
+esac
+
+
+10, break和continue
+break n		n表示要跳出的循环层数
+continue n	n表示要跳过的循环层数
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

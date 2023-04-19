@@ -1,0 +1,18 @@
+
+//1，声明变量
+CMapHyperLink	m_MapHyperLink;
+
+//2，绑定到图片控件
+DDX_Control(pDX, IDC_LINK, m_MapHyperLink);
+
+//3，初始化
+m_MapHyperLink.SetURL("https://blog.csdn.net/weixin_43557209");
+m_MapHyperLink.SetTipText("欢迎访问ptf_bin的BLOG");
+
+
+
+
+
+
+
+

@@ -1,0 +1,32 @@
+	//主要函数：Load、ResetPos、FindElem、IntoElem、GetAttrib、OutOfElem
+	C_BurXMLFile XMLDoc;
+	if (!::PathFileExists(m_strResolutionInitXml) || !XMLDoc.Load(m_strResolutionInitXml))
+	{
+		//...
+	}
+	XMLDoc.ResetPos();
+	if(XMLDoc.FindElem(_T("File")))
+	{
+		XMLDoc.IntoElem();
+		//chip
+		if (XMLDoc.FindElem(_T("Chip")))
+		{
+			CString strChipInitFile = XMLDoc.GetAttrib(_T("InitFile"));
+			if (strChipInitFile.IsEmpty())
+			{
+				//...
+			}
+		}
+		
+		//sensor
+		if (XMLDoc.FindElem(_T("Sensor")))
+		{
+			XMLDoc.IntoElem();
+			if(XMLDoc.FindElem(_T("SensorItem")))
+			{
+				//...
+			}
+			XMLDoc.OutOfElem();
+		}
+	}
+	

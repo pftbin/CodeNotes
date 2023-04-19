@@ -1,0 +1,121 @@
+WINDIR: 					//系统目录 - C:\WINDOWS
+SYSTEMROOT: 				//系统目录 - C:\WINDOWS
+SYSTEMDRIVE:    			//系统根目录 - C:
+HOMEDRIVE:    				//当前用户根目录 - C:
+USERPROFILE:    			//当前用户目录 - C:\Users\Kandy
+HOMEPATH:    				//当前用户路径 - \Users\Kandy
+TMP:    					//当前用户临时文件夹 - C:\Users\Kandy\AppData\Local\Temp
+TEMP:    					//当前用户临时文件夹 - C:\Users\Kandy\AppData\Local\Temp
+APPDATA:    				//当前用户数据文件夹 - C:\Users\Kandy\AppData\Roaming
+PROGRAMFILES:    			//程序默认安装目录 - C:\Program Files (x86)
+COMMONPROGRAMFILES:    		//文件通用目录 - C:\Program Files (x86)\Common Files
+USERNAME:    				//当前用户名 - Kandy
+ALLUSERSPROFILE:    		//所有用户文件目录 - C:\ProgramData
+OS: 						//操作系统名 - Windows_NT
+COMPUTERNAME: 				//计算机名 - KANDY-PC
+NUMBER_OF_PROCESSORS: 		//处理器个数 - 4
+PROCESSOR_ARCHITECTURE: 	//处理器芯片架构 - x86
+PROCESSOR_LEVEL:    		//处理器型号 - 6
+PROCESSOR_REVISION: 		//处理器修订号 - 3c03
+USERDOMAIN: 				//包含用户帐号的域 - KANDY-PC
+COMSPEC:    				//C:\WINDOWS\system32\cmd.exe
+PATHEXT:    				//执行文件类型 - .COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
+PATH:    					//搜索路径
+
+//获取指定宏环境变量的值
+wchar_t buffer[MAX_PATH];
+DWORD code = GetEnvironmentVariable(L"WINDIR", buffer, MAX_PATH);
+std::wcout << L"WINDIR:\t\t\t" << buffer << std::endl;
+
+//获取所有环境变量的值
+#include <strsafe.h>
+void ShowEnvironmentStrings()
+{
+	PTSTR pEnvBlock=GetEnvironmentStrings(); //获取环境变量内存块指针
+	TCHAR szName[MAX_PATH];
+	TCHAR szValue[MAX_PATH];
+	PTSTR pszCurrent = pEnvBlock;
+	HRESULT hr = S_OK; //typedef LONG HRESULT;
+	PCTSTR pszPos = NULL;
+	int current = 0;
+
+	while(pszCurrent !=NULL)
+	{
+		//跳过无意义的字符串如“=::=::\”
+		if(*pszCurrent != TEXT('='))
+		{
+			pszPos = _tcschr(pszCurrent,TEXT('='));
+			pszPos++;
+			size_t cbNameLength = (size_t)pszPos-(size_t)pszCurrent-sizeof(TCHAR);
+			hr = StringCbCopyN(szName,MAX_PATH,pszCurrent,cbNameLength);//将变量名复制到缓冲区，不要直接读取后显示
+			if(FAILED(hr))
+			{
+				TRACE(TEXT("StringCbCopyN error\r\n"));
+				break;
+			}
+			hr =StringCchCopyN(szValue,MAX_PATH,pszPos,_tcslen(pszPos)+1);
+			if(SUCCEEDED(hr))
+			{
+				TRACE(TEXT("[%u] %s=%s\r\n"),current,szName,szValue);
+			}
+			else if(hr == STRSAFE_E_INSUFFICIENT_BUFFER )//这里是错误检查
+			{
+				TRACE(TEXT("[%u] %s=%s...insufficient buffer space\r\n"),current,szName,szValue);
+			}
+			else
+			{
+				TRACE(TEXT("[%u] %s=???\r\n"),current,szName);
+				break;
+			}
+		}
+		else
+		{
+			TRACE(TEXT("[%u] %s\r\n"),current,pszCurrent);
+		}
+		//查找下一个环境变量
+		current++;
+		while(*pszCurrent !=TEXT('\0'))
+			pszCurrent++;
+		pszCurrent++;//循环后再自增一下跳过0，到达变量的开头部分
+		if (*pszCurrent==TEXT('\0'))  break; //如果到达以0开头的变量名，说明遍历结束
+	}
+	FreeEnvironmentStrings(pEnvBlock);
+}
+
+//添加PATH系统变量（需先获取原本的值）
+BOOL SetCurrentEnvPath()
+{
+	char chBuf[0x8000]={0};
+	DWORD dwSize =GetEnvironmentVariable("path",chBuf,0x10000);
+	CString strEnvPaths(chBuf);
+ 
+	// 将当前路径\dll路径添加到本进程的路径中
+	if(!::GetModuleFileName(NULL,chBuf,MAX_PATH))
+		return FALSE;
+	CString strAppPath(chBuf);
+	const int nPos = strAppPath.ReverseFind(_T('\\'));
+	if(nPos>0){
+		// 路径中包含最后的'\\'
+		strAppPath = strAppPath.Mid(0,nPos+1);
+	}
+ 
+	strEnvPaths.TrimRight(";");
+	strEnvPaths += ";" + strAppPath +"DllName.dll;";
+ 
+	BOOL bRet = SetEnvironmentVariable("path",strEnvPaths);
+ 
+	return bRet;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

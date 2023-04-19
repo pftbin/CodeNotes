@@ -1,0 +1,32 @@
+1、COM组件以接口对功能分类，便于组织；DLL特别是大的DLL，函数一大堆，难以组织；
+
+2、COM组件便于升级维护，功能扩充，只需添加接口就行；DLL升级困难，函数不能随意改变；
+
+3、COM创建调用有很好的安全性，DLL没有；
+
+4、COM组件可轻松实现进程间调用，DLL很困难；
+
+5、COM组件可轻松实现分布式调用，DLL不可能；
+
+6、COM组件具有封装、继承、多态的面向对象特征，DLL只有封装；
+
+7、在COM组件的基础上实现了大量功能：ActiveX，OLE等
+
+1.COM组件需要注册才能使用，而普通的DLL不需要注册，直接LoadLibrary使用；
+2.COM组件通过暴露接口指针被调用，而普通DLL是暴露函数地址被调用。
+
+
+若要使用类厂对象去创建COM对象，首先得创建类厂对象
+可以使用库函数CoGetClassObject来创建COM类的类厂
+若找到的COM对象是进程内组件，则使用DLL导出函数DllGetClassObject函数
+若创建的是进程外组件，则要分别调用CoRegisterClassObject和CoRevokeClassObject去注册和反注册类厂对象 ，正常地创建、销毁COM对象
+
+#import指令使dll库中的类型信息导出为描述的COM接口的c++类头文件(.tlh 和 .tli 两个文件)
+例：
+#import <msxml3.dll> raw_interfaces_only  //raw_interfaces_only 属性使得生成文件只有.tlh
+
+
+LoadLibrary  			一般是动态加载DLL时（你并不需要对应的头文件，和LIB）
+#pragma comment 		一般是静态加载DLL时（对应的头文件、DLL，和LIB缺一不可，并且生产的EXE没有找到DLL文件就会导致“应用程序初始化失败”）
+#import指令				用于从一个类型库中结合信息。该类型库的内容被转换为C++类,主要用于描述COM界面
+

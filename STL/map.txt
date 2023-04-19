@@ -1,0 +1,44 @@
+一、insert和[]的区别
+insert时如key已存在，则插入失败，[]则会覆盖原来的值
+
+二、使用map时key为结构体，保持Key升序排列
+A）可重载小于比较符
+例：
+typedef struct tagStudentinfo
+{
+	int      niD;
+	string   strName;
+    bool operator < (tagStudentinfo const& _A) const
+    {     
+		//这个函数指定排序策略，按niD排序，如果niD相等的话，按strName排序
+        if(niD < _A.niD) 
+			return true;
+			
+        if(niD == _A.niD)
+            return strName.compare(_A.strName) < 0;
+			
+		return false;
+    }
+}Studentinfo, *PStudentinfo; //学生信息
+B）利用仿函数，声明map时传入比较函数类
+例：
+class sort
+{
+public:
+    bool operator() (Studentinfo const &_A, Studentinfo const &_B) const
+    {
+        if(_A.niD < _B.niD)
+            return true;
+        if(_A.niD == _B.niD)
+            return _A.strName.compare(_B.strName) < 0;
+			
+    return false;
+    }
+}
+map<Studentinfo, int, sort>mapStudent;
+
+三、迭代器，前缀++和后缀++
+前缀++：返回的是迭代器引用（++i;return *this）
+后缀++：返回的是临时迭代器（tmp=*this; ++i; return tmp）
+
+

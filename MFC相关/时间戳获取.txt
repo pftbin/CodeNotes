@@ -1,0 +1,29 @@
+CString strTimestamp;
+
+#if 0 //10位时间戳
+	SYSTEMTIME sysTime;
+	::GetLocalTime(&sysTime);	
+	CTime curTime(sysTime);
+	__int64	timeStamp = curTime.GetTime();
+	strTimestamp.Format(_T("%d"),(DWORD)timeStamp);
+#else //13位时间戳
+	strTimestamp = GetUnixTime();
+#endif
+
+CString GetUnixTime()
+{
+	CString nowTime;
+	SYSTEMTIME sysTime;
+	GetLocalTime(&sysTime);
+	time_t unixTime;
+	time(&unixTime);
+
+	CString cs_uninxtime;
+	CString cs_milliseconds;
+	cs_uninxtime.Format(L"%ld", unixTime);
+	cs_milliseconds.Format(L"%ld", sysTime.wMilliseconds);
+	nowTime = cs_uninxtime + cs_milliseconds;
+	//nowTime.Format(_T("%ld%ld"), unixTime, sysTime.wMilliseconds);//输出UNIX时间戳字符串
+
+	return nowTime;
+}

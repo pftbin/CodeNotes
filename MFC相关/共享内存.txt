@@ -1,0 +1,197 @@
+//共享内存实现文件拷贝（效率比普通拷贝慢）
+BOOL MoveBigFile(CString strSrcFilePath, CString strDstFilePath)
+{
+	if (::PathFileExists(strDstFilePath))
+		::DeleteFile(strDstFilePath);
+
+	//OPEN_EXISTING
+	HANDLE hSrcFile = CreateFile(strSrcFilePath,GENERIC_WRITE | GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_READONLY,NULL);
+	if (hSrcFile==INVALID_HANDLE_VALUE)
+	{
+		TRACE(("源文件读取错误,错误码: %d\n"),GetLastError());
+		return FALSE;
+	}
+
+	//CREATE_ALWAYS
+	HANDLE hDstFile = CreateFile(strDstFilePath,GENERIC_WRITE | GENERIC_READ,FILE_SHARE_READ,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+	if (hDstFile==INVALID_HANDLE_VALUE)
+	{
+		TRACE(("目标文件创建错误,错误码: %d\n"),GetLastError());
+		return FALSE;
+	}
+
+	BOOL bResult = TRUE;
+	if (hDstFile!=INVALID_HANDLE_VALUE && hDstFile!= INVALID_HANDLE_VALUE)
+	{
+		HANDLE hFileMapping = CreateFileMapping(hSrcFile,NULL,PAGE_READWRITE, 0, 0, NULL);
+		if (hFileMapping==INVALID_HANDLE_VALUE)
+		{
+			TRACE(("源文件映射出错,错误码: %d\n"),GetLastError());
+			bResult = FALSE;
+		}
+
+		// 得到系统分配粒度  
+		SYSTEM_INFO SysInfo;  
+		GetSystemInfo(&SysInfo);  
+		DWORD dwGran = SysInfo.dwAllocationGranularity;  
+		DWORD dwFileSizeHigh = 0;  
+		DWORD dwFileSize = GetFileSize(hSrcFile, &dwFileSizeHigh); 
+		if (dwFileSizeHigh != 0)
+		{
+			TRACE(("文件大小超过最大限制"));
+			bResult = FALSE;
+		}
+		HANDLE hFileMapping2 = CreateFileMapping(hDstFile,NULL,PAGE_READWRITE,0,(DWORD)(dwFileSize&0xFFFFFFFF),NULL);
+		if (hFileMapping2==INVALID_HANDLE_VALUE)
+		{
+			TRACE(("目标文件映射出错,错误码: %d\n"),GetLastError());
+			bResult = FALSE;
+		}
+
+		if (bResult && hFileMapping && hFileMapping2)
+		{
+			LPBYTE pbFile2Addr = (PBYTE)MapViewOfFile(hFileMapping2,FILE_MAP_ALL_ACCESS,0, 0, dwFileSize);
+			if (pbFile2Addr==NULL)
+			{
+				TRACE(("读取目标文件映射出错,错误码: %d\n"),GetLastError());
+				bResult = FALSE;
+			}
+			else
+			{ 
+				DWORD dwFileOffset = 0;
+				DWORD dwBlockBytes = min(dwFileSize,(1000*dwGran));
+				DWORD dwCount = dwFileSize/dwBlockBytes;
+				for (DWORD dwIndex = 0; dwIndex < dwCount; dwIndex++)
+				{
+					LPBYTE pbFile1Addr = (LPBYTE)MapViewOfFile(hFileMapping,FILE_MAP_ALL_ACCESS, 0, (DWORD)(dwFileOffset & 0xFFFFFFFF),  dwBlockBytes);  
+					if (pbFile1Addr)
+					{
+						memcpy(pbFile2Addr+dwFileOffset,pbFile1Addr,dwBlockBytes);
+						dwFileOffset += dwBlockBytes;
+					}
+					UnmapViewOfFile(pbFile1Addr);
+					FlushViewOfFile(pbFile2Addr,dwBlockBytes);
+				}
+
+				dwBlockBytes = dwFileSize-dwFileOffset;
+				if (dwBlockBytes)
+				{
+					LPBYTE pbFile1Addr = (LPBYTE)MapViewOfFile(hFileMapping,FILE_MAP_ALL_ACCESS, 0, (DWORD)(dwFileOffset & 0xFFFFFFFF),  dwBlockBytes);  
+					if (pbFile1Addr)
+					{
+						memcpy(pbFile2Addr+dwFileOffset,pbFile1Addr,dwBlockBytes);
+						dwFileOffset += dwBlockBytes;
+					}
+					UnmapViewOfFile(pbFile1Addr);
+					FlushViewOfFile(pbFile2Addr,dwBlockBytes);
+				}
+			}
+			UnmapViewOfFile(pbFile2Addr);
+		}
+		CloseHandle(hFileMapping);
+		CloseHandle(hFileMapping2);
+	}
+	CloseHandle(hSrcFile);
+	CloseHandle(hDstFile);
+	
+	return TRUE;
+}
+
+
+//共享内存实现进程通讯
+注意：主进程负责初始化和退出，字进程读取或写入只需要知道共享名称和共享大小即可
+
+BOOL InitShareMemory(HANDLE& hFile,HANDLE& hMap,CString strFilePath,CString strShareName,DWORD dwShareSize)
+{
+	hFile = CreateFile(strFilePath,GENERIC_READ|GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+	if(hFile==NULL || hFile==INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(hFile); hFile = NULL;
+		TRACE(_T("CreateFile error! Code:%d\n"),GetLastError());
+		return FALSE;
+	}
+
+	hMap = CreateFileMapping(hFile,NULL,PAGE_READWRITE,0,dwShareSize,strShareName);
+	if(hFile==NULL || hFile==INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(hMap); hMap = NULL;
+		TRACE(_T("CreateFileMap error! Code:%d\n"),GetLastError());
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+BOOL WriteShareMemory(CString strShareName, DWORD dwShareSize, CString strInputData)
+{
+	HANDLE hMap = OpenFileMapping(FILE_MAP_ALL_ACCESS,TRUE,strShareName);  
+	if(hMap == NULL)
+	{
+		CloseHandle(hMap); hMap = NULL;
+		TRACE(_T("OpenFileMap error! Code:%d\n"),GetLastError());
+		return FALSE;
+	}   
+
+	CHAR* pszText = NULL;    
+	pszText = (CHAR*)MapViewOfFile(hMap,FILE_MAP_ALL_ACCESS,0,0,dwShareSize);    
+	if(pszText==NULL)
+	{    
+		TRACE(_T("MapViewOfFile error! Code:%d\n"),GetLastError());
+		return FALSE;   
+	}
+
+	CHAR* pszInput = new CHAR[dwShareSize];
+	memset(pszInput,0,sizeof(CHAR)*dwShareSize);
+
+	USES_CONVERSION;
+	char* pTemp = T2A(strInputData);
+	strcpy(pszInput,pTemp);
+	memset(pszText,0,sizeof(BYTE)*dwShareSize);
+	sprintf(pszText,pszInput);
+
+	UnmapViewOfFile((LPCVOID)pszText);
+	delete[] pszInput;pszInput = NULL;
+
+	return TRUE;
+}
+
+BOOL ReadShareMemory(CString strShareName, DWORD dwShareSize, CString& strOutputData)
+{
+
+	HANDLE hMap = OpenFileMapping(FILE_MAP_ALL_ACCESS,TRUE,strShareName);  
+	if(hMap == NULL)
+	{
+		CloseHandle(hMap); hMap = NULL;
+		TRACE(_T("OpenFileMap error! Code:%d\n"),GetLastError());
+		return FALSE;
+	}   
+
+	CHAR* pszText = NULL;    
+	pszText = (CHAR*)MapViewOfFile(hMap,FILE_MAP_ALL_ACCESS,0,0,dwShareSize);    
+	if(pszText==NULL)
+	{    
+		TRACE(_T("MapViewOfFile error! Code:%d\n"),GetLastError());
+		return FALSE;   
+	}
+
+	USES_CONVERSION; 
+	strOutputData = A2T(pszText);
+	UnmapViewOfFile((LPCVOID)pszText);
+
+	return TRUE;
+}
+
+BOOL ExitShareMemory(HANDLE& hFile,HANDLE& hMap)
+{
+	if (hFile!=NULL && hFile!=INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(hFile);hFile = NULL;
+	}
+
+	if (hMap!=NULL && hMap!=INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(hMap);hMap = NULL;
+	}
+
+	return TRUE;
+}

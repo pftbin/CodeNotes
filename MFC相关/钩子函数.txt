@@ -1,0 +1,122 @@
+//////////////////////线程钩子，只获取本窗口的消息///////////////////////////
+参考：http://blog.chinaunix.net/uid-25799257-id-3877143.html
+//h文件
+static LRESULT CALLBACK HookProc(int nCode, WPARAM wParam, LPARAM lParam);
+static HHOOK			m_hHook;
+static CEverthingDlg*	m_pThis;
+
+//cpp文件
+HHOOK	CEverthingDlg::m_hHook = NULL;
+CEverthingDlg*	CEverthingDlg::m_pThis = NULL;
+
+构造函数()
+{
+	...
+	m_pThis = this;
+	m_hHook = SetWindowsHookEx(WH_GETMESSAGE, HookProc, 0, ::GetCurrentThreadId());
+}
+
+LRESULT CALLBACK CEverthingDlg::HookProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	MSG* pMsg = (MSG*)lParam;
+	CString strMessage;
+	
+
+	if(pMsg->message == WM_LBUTTONDOWN)
+	{
+		strMessage.Format(_T("%s [%d,%d]\n"),_T("HookProc: LeftButtonDown"),pMsg->pt.x,pMsg->pt.y);
+		TRACE(strMessage);
+	}
+	if(pMsg->message == WM_LBUTTONUP)
+	{
+		strMessage.Format(_T("%s [%d,%d]\n"),_T("HookProc: LeftButtonUp"),pMsg->pt.x,pMsg->pt.y);
+		TRACE(strMessage);
+	}
+	if(pMsg->message == WM_LBUTTONDBLCLK)
+	{
+		strMessage.Format(_T("%s [%d,%d]\n"),_T("HookProc: LeftButtonDbClick"),pMsg->pt.x,pMsg->pt.y);
+		TRACE(strMessage);
+	}
+	if(pMsg->message == WM_MOUSEMOVE)
+	{
+		//strMessage.Format(_T("%s [%d,%d]"),_T("HookProc: LeftButtonMouseMove\n"),pMsg->pt.x,pMsg->pt.y);
+		//TRACE(strMessage);
+	}
+
+	m_pThis->PreTranslateMessage(pMsg);
+	return CallNextHookEx(m_hHook, nCode, wParam, lParam);
+}
+
+//////////////////////全局钩子///////////////////////////
+参考：https://www.pianshen.com/article/1596579111/
+
+//1.新建Win32 dll，dllmain.cpp实现如下
+
+HHOOK g_Hook = NULL; //钩子句柄
+HINSTANCE g_Inst = NULL; //DLL模块句柄
+BOOL APIENTRY DllMain( HMODULE hModule,
+					  DWORD  ul_reason_for_call,
+					  LPVOID lpReserved
+					  )
+{
+	switch (ul_reason_for_call)
+	{
+	case DLL_PROCESS_ATTACH:
+	case DLL_THREAD_ATTACH:
+	case DLL_THREAD_DETACH:
+	case DLL_PROCESS_DETACH:
+		break;
+	}
+
+	g_Inst = (HINSTANCE)hModule;
+	return TRUE;
+}
+
+LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam, LPARAM lParam)
+{
+	if(code < 0)
+	{
+		//如果code小于0，必须调用CallNextHookEx传递消息，不处理该消息，并返回CallNextHookEx的返回值。
+		return CallNextHookEx(g_Hook, code, wParam, lParam);
+	}
+
+	if(code == HC_ACTION && lParam > 0)
+	{
+		//code等于HC_ACTION，表示消息中包含按键消息
+		//如果为WM_KEYDOWN，则显示按键对应的文本
+
+		TCHAR strData[MAXBYTE] = {0};
+		GetKeyNameText(lParam, strData, MAXBYTE);
+
+		MessageBox(NULL,(LPCTSTR)strData,(LPCTSTR)"Message",MB_OK);
+	}
+
+	return CallNextHookEx(g_Hook, code, wParam, lParam);
+}
+
+extern "C" __declspec(dllexport) VOID SetHookOn()
+{
+	//安装钩子
+	g_Hook = SetWindowsHookEx(WH_KEYBOARD, KeyboardProc, g_Inst, 0);
+}
+
+extern "C" __declspec(dllexport) VOID SetHookOff()
+{
+	//卸载钩子
+	UnhookWindowsHookEx(g_Hook);
+}
+
+//2.应用程序中导入lib，dll放在运行目录，启动调用SetHookOn，退出调用SetHookOff即可
+
+#pragma comment (lib, "../Debug/GlobalHook.lib")
+extern "C" VOID SetHookOn();
+extern "C" VOID SetHookOff();
+
+
+
+
+
+
+
+
+

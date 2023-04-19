@@ -1,0 +1,95 @@
+1.打开注册表键值
+LONG RegOpenKey(
+  HKEY hKey,         // 主键
+  LPCTSTR lpSubKey,  // 子键
+  PHKEY phkResult    // 返回的HKEY类型的指针。以后，读写，关闭用这个指针
+);
+2.创建注册表键值，包含打开功能
+//创建一个指定的注册表项，如果这个表项已经存在，则打开它
+LONG WINAPI RegCreateKey(		
+  __in      HKEY hKey,			// 主键
+  __in_opt  LPCTSTR lpSubKey,	// 子键
+  __out     PHKEY phkResult		// 引用返回
+);
+
+hKey 取值：
+HKEY_CLASSES_ROOT
+HKEY_CURRENT_CONFIG
+HKEY_CURRENT_USER
+HKEY_LOCAL_MACHINE
+HKEY_USERS
+
+例：
+// 打开
+ HKEY hKey = NULL;
+ long nRet=::RegOpenKey(HKEY_LOCAL_MACHINE, "SoftWare\\Knight Studio\\Knight", &hKey);
+ if(nRet != ERROR_SUCCESS)
+ {
+   //创建
+	::RegCreateKey(HKEY_LOCAL_MACHINE, "SoftWare\\Knight Studio\\Knight", &hKey);
+ }
+ 
+ 3.读取键值
+LONG RegQueryValue(
+　　HKEY hkey,
+　　LPCTSTR lpSubkey,
+　　LPTSTR lpValue,
+　　PLONG lpcbValue
+　　);
+例：
+//将其第三个参数设置为NULL，第四个参数设置为非NULL，那么该函数将返回存储数据的大小
+LONG lValue;
+RegQueryValue(HKEY_LOCAL_MACHINE,"SoftWare\\Knight Studio\\Knight",NULL,&lValue);
+char *pBuf = new char[lValue];
+RegQueryValue(HKEY_LOCAL_MACHINE,"SoftWare\\Knight Studio\\Knight",pBuf,&lValue);
+
+4.设置键值
+//设置一个指定的默认的或者是未命名的注册表项的值。这个值必须是文本串，也就是说只能写入文本类型的值
+LONG WINAPI RegSetValue(		
+	HKEY hKey,			
+	LPCTSTR lpSubKey,
+	DWORD dwType,		// 数据类型,常用:（REG_SZ=字符串，REG_DWORD=DWORD） 
+	LPCTSTR lpData,		// 写入的数据
+	DWORD cbData		// 数据的长度
+);
+例：
+//第二个参数NULL表示在当前Key下面设置值
+//继续创建子项后设置置则传入子符串，如“Folder\\NewKey”
+RegSetValue(hKey, NULL, REG_SZ, "Value", strlen("Value"));
+
+5.关闭Key
+::RegCloseKey(hKey);
+
+带Ex后缀函数用法实例：
+BOOL GetRegInfo(TCHAR* subKeyName, TCHAR* valueName, TCHAR* strValue, TCHAR *numValue)
+{
+	HKEY hKey = 0;
+	LONG lRet = 0;
+	TCHAR szRegData[MAX_PATH];
+	DWORD dwBufLen = MAX_PATH;
+
+	//打开
+	lRet = ::RegOpenKeyEx(HKEY_CURRENT_USER, subKeyName, 0, KEY_QUERY_VALUE, &hKey);
+	if (lRet != ERROR_SUCCESS) 
+		return FALSE;
+
+	//查询
+	lRet = ::RegQueryValueEx(hKey, valueName, NULL, NULL, (LPBYTE)szRegData, &dwBufLen);
+	if ((lRet != ERROR_SUCCESS) || (dwBufLen > MAX_PATH))
+		return FALSE;
+	_tcscpy(strValue, szRegData);
+	
+	//关闭
+	::RegCloseKey(hKey);
+	return TRUE;
+}
+
+
+
+详细参考：https://blog.csdn.net/linshaolie/article/details/9769893
+ 
+ 
+ 
+ 
+ 
+ 

@@ -1,0 +1,60 @@
+//获取32位UUID
+#include <string>
+#include <stdio.h>
+#if defined(WIN32)||defined(WINCE)||defined(WIN64)
+#include <objbase.h>
+#else
+#include <uuid/uuid.h> 
+#endif
+std::string GetUUID(std::string& strUUID)
+{
+	strUUID = "";
+#if defined(WIN32)||defined(WINCE)||defined(WIN64)
+	GUID guid;
+	if (!CoCreateGuid(&guid))
+	{
+		char buffer[64] = { 0 };
+		_snprintf_s(buffer, sizeof(buffer),
+			//"%08X%04X%04X%02X%02X%02X%02X%02X%02X%02X%02X",    //⼤写
+			"%08x%04x%04x%02x%02x%02x%02x%02x%02x%02x%02x",        //⼩写
+			guid.Data1, guid.Data2, guid.Data3,
+			guid.Data4[0], guid.Data4[1], guid.Data4[2],
+			guid.Data4[3], guid.Data4[4], guid.Data4[5],
+			guid.Data4[6], guid.Data4[7]);
+		strUUID = buffer;
+	}
+#else
+	uuid_t uu;
+	uuid_generate(uu);
+#endif
+	return strUUID;
+}
+
+
+//数字转换成GUID格式
+CString strNumber = 1234;
+CString strDataID = GetGuidByStoryID(strNumber.GetBuffer(strNumber.GetLength()));
+CString GetGuidByStoryID( TCHAR tzNumID[])
+{
+	TCHAR tzbuffer[] = {_T("00000000-0000-0000-0000-000000000000")};
+	int nLen = _tcslen(tzNumID);
+	int nguidlen = _tcslen(tzbuffer);
+	TCHAR *pSrc = &tzNumID[nLen-1];	
+	TCHAR *pdest = &tzbuffer[nguidlen-1];
+	while(nLen >0 && nguidlen>0)
+	{
+		if(*pdest == _T('-'))
+		{
+			nguidlen--;
+			pdest--;
+			continue;
+		}
+		*pdest = *pSrc;
+		pdest--;
+		pSrc--;
+		nLen--;
+		nguidlen--;
+	}
+	CString strNewID = tzbuffer;
+	return strNewID;
+}

@@ -1,0 +1,33 @@
+#include <iostream>
+#include <string>
+#import <Shell32.dll>
+using namespace std;
+
+void GetFileInfo
+{
+	CoInitialize(NULL);
+
+	Shell32::IShellDispatchPtr ptrShell; 
+	ptrShell.CreateInstance(__uuidof(Shell32::Shell)); 
+	_variant_t var((short)Shell32::ssfRECENT); 
+
+	Shell32::FolderPtr ptrFolder = ptrShell->NameSpace("D:\\digitman");
+
+	Shell32::FolderItemPtr ptrItem = ptrFolder->ParseName("_0000007f_0_18.webm");
+
+	for( int i = 0; i < 50; i++ ) 
+	{ 
+		string strName = ptrFolder->GetDetailsOf(0, i); 
+		cout << i <<strName << ":"; 
+		//string strValue = ptrFolder->GetDetailsOf(ptrItem, i); 
+		string strValue = ptrFolder->GetDetailsOf( _variant_t((IDispatch *)ptrItem), i);
+
+		cout << strValue << endl; 
+	} 
+
+	ptrItem.Release();
+	ptrFolder.Release();
+	ptrShell.Release(); 
+
+	CoUninitialize(); 
+}

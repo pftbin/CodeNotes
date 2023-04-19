@@ -1,0 +1,91 @@
+1.
+ModifyStyle(WS_CAPTION | WS_THICKFRAME, 0);
+
+2.
+ON_WM_NCHITTEST()
+ON_WM_SETCURSOR()
+
+3.
+afx_msg LRESULT ChromeUIDlg::OnNcHitTest(CPoint point)
+{
+	CRect       rectWindow;
+	GetWindowRect(&rectWindow);
+	if (point.x <= rectWindow.left + 3)
+	{
+		return HTLEFT;
+	}
+	else if (point.x >= rectWindow.right - 3)
+	{
+		return HTRIGHT;
+	}
+	else if (point.y <= rectWindow.top + 3)
+	{
+		return HTTOP;
+	}
+	else if (point.y >= rectWindow.bottom - 3)
+	{
+		return HTBOTTOM;
+	}
+	else if (
+		(point.x <= rectWindow.left + 10)
+		&& (point.y <= rectWindow.top + 10)
+		)
+	{
+		return HTTOPLEFT;
+	}
+	else if (
+		(point.x >= rectWindow.right - 10)
+		&& (point.y <= rectWindow.top + 10)
+		)
+	{
+		return HTTOPRIGHT;
+	}
+	else if (
+		(point.x <= rectWindow.left + 10)
+		&& (point.y >= rectWindow.bottom - 10)
+		)
+	{
+		return HTBOTTOMLEFT;
+	}
+	else if (
+		(point.x >= rectWindow.right - 10)
+		&& (point.y >= rectWindow.bottom - 10)
+		)
+	{
+		return HTBOTTOMRIGHT;
+	}
+	else
+	{
+		return CDialog::OnNcHitTest(point);
+	}
+}
+
+afx_msg BOOL ChromeUIDlg::OnSetCursor(CWnd * pWnd, UINT nHitTest, UINT message)
+{
+	if (nHitTest == HTTOP || nHitTest == HTBOTTOM)
+	{
+		SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_SIZENS)));
+		return TRUE;
+	}
+	else if (nHitTest == HTLEFT || nHitTest == HTRIGHT)
+	{
+		SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_SIZEWE)));
+		return TRUE;
+	}
+	else if (nHitTest == HTTOPLEFT || nHitTest == HTBOTTOMRIGHT)
+	{
+		SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_SIZENWSE)));
+		return TRUE;
+	}
+	else if (nHitTest == HTTOPRIGHT || nHitTest == HTBOTTOMLEFT)
+	{
+		SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_SIZENESW)));
+		return TRUE;
+	}
+	else
+	{
+		return CDialog::OnSetCursor(pWnd, nHitTest, message);
+	}
+}
+
+

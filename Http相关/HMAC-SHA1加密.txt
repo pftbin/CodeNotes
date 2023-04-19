@@ -1,0 +1,40 @@
+#include <iomanip>
+#include "openssl/hmac.h"
+
+//lib
+#pragma comment(lib, "libcurl.lib") 
+#pragma comment(lib, "ssleay32.lib")
+#pragma comment(lib, "libeay32.lib")
+
+
+BOOL HMAC_SHA1_BASE64(CString strInitKey, CString strText, CString& strResult)
+{
+	std::string key = (CT2A)strInitKey;
+	std::string msg = (CT2A)strText;
+
+	//HMAC_SHA1
+	unsigned char hash[32];unsigned int len = 32;
+	HMAC_CTX hctx;
+	HMAC_CTX_init(&hctx);
+	HMAC_Init_ex(&hctx, &key[0], key.length(), EVP_sha1(), NULL);	//支持其他加密算法: EVP_md5(), EVP_sha256, EVP_sha512...
+	HMAC_Update(&hctx, (const unsigned char*) &msg[0], msg.length());
+	HMAC_Final(&hctx, hash, &len);
+	HMAC_CTX_cleanup(&hctx);
+	stringstream ss;
+	for (int i = 0; i < len; i++)
+	{
+		ss << hex << std::setw(2) << std::setfill('0') << (unsigned int)hash[i];
+	}
+	
+
+	//BASE64
+	std::string source = ss.str();
+	std::string result = base64_encodebyhex((const unsigned char*)source.c_str(),source.length());
+	strResult = result.c_str();
+
+	//URL编码
+	std::string result_url = encodeURIComponent(result);
+	strResult = result_url.c_str();
+
+	return TRUE;
+}

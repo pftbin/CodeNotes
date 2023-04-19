@@ -1,0 +1,31 @@
+#include <Netlistmgr.h>
+
+BOOL CheckIsNetworkWorking()
+{
+	CoInitialize(NULL);
+	IUnknown *pUnknown = NULL;
+	BOOL   bOnline = TRUE;
+	HRESULT Result = CoCreateInstance(CLSID_NetworkListManager, NULL, CLSCTX_ALL, IID_IUnknown, (void **)&pUnknown);
+	if (SUCCEEDED(Result))
+	{
+		INetworkListManager *pNetworkListManager = NULL;
+		if (pUnknown)
+			Result = pUnknown->QueryInterface(IID_INetworkListManager, (void**)&pNetworkListManager);
+		if (SUCCEEDED(Result))
+		{
+			VARIANT_BOOL IsConnect = VARIANT_FALSE;
+			if (pNetworkListManager)
+				Result = pNetworkListManager->get_IsConnectedToInternet(&IsConnect);
+			if (SUCCEEDED(Result))
+			{
+				bOnline = (IsConnect == VARIANT_TRUE) ? true : false;
+			}
+		}
+		if (pNetworkListManager)
+			pNetworkListManager->Release();
+	}
+	if (pUnknown)
+		pUnknown->Release();
+	CoUninitialize();
+	return bOnline;
+}

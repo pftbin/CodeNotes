@@ -1,0 +1,88 @@
+////////[map 按照value排序]////////
+思想：map中的元素是特定组合的pair，将其放入到vector中进行排序（因为sort只支持序列容器，且可自定义排序函数）
+头文件：
+#include <map>
+#include <vector>
+#include <algorithm>
+例：
+1.某种特定pair
+typedef std::pair<COLORREF, int> PAIR; 
+	
+2.排序函数（‘ > ’为降序）					
+static bool cmp_by_value(const PAIR& lhs, const PAIR& rhs)  
+{
+	return lhs.second > rhs.second;
+}
+
+3.map插入数据
+std::map<COLORREF, int>  myMap;
+myMap.insert(RGB(255,0,255),0);
+myMap.insert(RGB(255,255,0),10);
+myMap.insert(RGB(255,0,255),2);
+
+4.使用vector排序
+std::vector<PAIR> myVec(myMap.begin(), myMap.end());
+sort(myVec.begin(), myVec.end(), cmp_by_value);
+
+5.使用数据
+myVec[0].first;
+myVec[0].second;
+
+
+////////[set 支持自定义结构体find]////////
+typedef struct 
+{
+	DWORD dwValue0;
+	DWORD dwValue1;
+}ITEM;
+
+class ITEM_Sort
+{
+public:
+	bool operator() (const ITEM &leftItem, const ITEM &rightItem) const
+	{
+		if (leftItem.dwSensorIdx == rightItem.dwSensorIdx  &&
+			leftItem.dwSpeedIdx  == rightItem.dwSpeedIdx   )
+		{
+			return true;
+		}
+		else
+			return false;
+	}
+};
+std::set<ITEM,ITEM_Sort> SetResInfo;
+
+//使用find
+ITEM item；
+item.dwValue0 = 0;
+item.dwValue1 = 1;
+if (SetResInfo.find(item) != SetResInfo.end())
+{
+	//find success
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

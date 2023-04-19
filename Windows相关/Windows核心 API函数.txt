@@ -1,0 +1,823 @@
+/////////////////////////////////////////////////////////////////////////
+#include "psapi.h"
+1.枚举顶层窗口
+EnumWindows((WNDENUMPROC)EnumWindowsProc,0);
+
+2.根据窗口句柄获取进程ID
+GetWindowThreadProcessId(hwnd, &dwID);
+
+3.根据进程ID获取进程的句柄
+HANDLE hProcess = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dwID);
+
+4.根据进程句柄获取完整路径
+TCHAR tzprocName[1024] = {0};
+GetModuleFileNameEx(hProcess, NULL, tzprocName, 1024);
+
+//1234可用于检查特定名称的程序是否运行
+
+5.得到当前进程ID
+GetCurrentProcessId()
+
+6.得到当前线程ID
+GetCurrentThreadId()
+
+7.根据进程内核对象句柄得到进程ID
+GerProcessId(HANDLE hProcess);
+
+8.根据线程内核对象句柄得到线程ID
+GetThreadId(HANDLE hThread)
+
+9.根据线程内核对象句柄得到该线程所在进程的进程ID
+GetProcessIdOfThread(HANDLE hThread)
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+SYSTEM_INFO SystemInfo;
+GetSystemInfo(&SystemInfo);  
+TRACE(("当前PC的CPU核心数量：%d\n"),SystemInfo.dwNumberOfProcessors);
+
+//线程指定在指定CPU(核心)上执行
+DWORD_PTR WINAPI SetThreadAffinityMask(HANDLE hThread,DWORD_PTR dwThreadAffinityMask)
+//进程程指定在指定CPU(核心)上执行
+DWORD_PTR WINAPI SetProcessAffinityMask(HANDLE hThread,DWORD_PTR dwThreadAffinityMask)
+
+hThread:线程/进程 句柄        
+dwThreadAffinityMask:指定运行的核心（二进制）： 1表示使用的CPU核心, 0表示未使用的CPU核心，0x0000000E => 0000 1110,表示线程可以在1、2、3核心上运行 
+
+//////////////////////////////////////////////////////////////////////
+//获取平台和操作系统有关的版本信息
+BOOL WINAPI GetVersionEx(_Inout_ LPOSVERSIONINFO lpVersionInfo);
+typedef struct {  
+    DWORD dwOSVersionInfoSize;       //在使用GetVersionEx之前要将此初始化为结构的大小  
+    DWORD dwMajorVersion;            //系统主版本号  
+    DWORD dwMinorVersion;            //系统次版本号  
+    DWORD dwBuildNumber;             //系统构建号  
+    DWORD dwPlatformId;              //系统支持的平台  
+    TCHAR szCSDVersion[128];         //系统补丁包的名称  
+    WORD wServicePackMajor;          //系统补丁包的主版本  
+    WORD wServicePackMinor;          //系统补丁包的次版本  
+    WORD wSuiteMask;                 //标识系统上的程序组  
+    BYTE wProductType;               //标识系统类型  
+    BYTE wReserved;                  //保留,未使用  
+} OSVERSIONINFOEX, *POSVERSIONINFOEX;  
+
+CString GetOSVersion()  
+{  
+	CString strVersion = _T("");  
+	OSVERSIONINFO osvi;                 				//定义OSVERSIONINFO数据结构对象  
+	memset(&osvi, 0, sizeof(OSVERSIONINFO));        	//开空间   
+	osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);  //定义大小   
+	GetVersionEx (&osvi);                  				 //获得版本信息  
+
+	DWORD dwMajorVersion = osvi.dwMajorVersion;         //主版本号  
+	DWORD dwMinorVersion = osvi.dwMinorVersion;         //副版本  
+	char swVersion[10]={0};      
+	sprintf(swVersion,"%d.%d",dwMajorVersion,dwMinorVersion);   
+
+	if (!strcmp(swVersion,"5.0"))  
+	{  
+		strVersion =  _T("Windows 2000");       
+	}      
+	else if (!strcmp(swVersion,"5.1"))  
+	{  
+		strVersion = _T("Windows XP");      
+	}     
+	else if (!strcmp(swVersion,"5.2"))  
+	{  
+		strVersion = _T("Windows XP Professional x64");      
+	}     
+	else if (!strcmp(swVersion,"6.0"))  
+	{  
+		strVersion = _T("Windows Vista");      
+	}     
+	else if (!strcmp(swVersion,"6.1"))  
+	{  
+		strVersion = _T("Windows 7");      
+	}     
+	else if (!strcmp(swVersion,"6.2"))  
+	{  
+		strVersion = _T("Windows 8");        
+	}  
+	else if (!strcmp(swVersion,"6.3"))  
+	{  
+		strVersion = _T("Windows 8.1");       
+	}  
+	else if (!strcmp(swVersion,"10.0"))  
+	{  
+		strVersion = _T("Windows 10");        
+	}  
+	else  
+	{  
+		strVersion = _T("");  
+	}  
+	return strVersion;  
+}
+
+//判断当前用户是否是管理员用户
+BOOL IsUserAnAdmin()；
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//枚举所有进程 Process32First+Process32Next / EnumProcesses
+//获取进程执行文件的路径 
+GetModuleFileNameEx/pEntry.szExeFile(当前进程32位，只能查看32位进程)
+GetProcessFilePath (通过通过GetProcessImageFileName()函数获取进程的DOS文件路径，再通过与LogicalDriveStrings比对拼接路径，32、64位通用)
+// 
+功  能：获取指定进程所对应的可执行（EXE）文件全路径
+参  数：hProcess - 进程句柄。必须具有PROCESS_QUERY_INFORMATION 或者 PROCESS_QUERY_LIMITED_INFORMATION 权限
+        sFilePath - 进程句柄hProcess所对应的可执行文件路径
+//0
+#include <Psapi.h>
+void GetProcessFilePath(IN HANDLE hProcess, OUT CString& sFilePath)
+{
+    sFilePath = _T("");
+    TCHAR tsFileDosPath[MAX_PATH + 1];
+    ZeroMemory(tsFileDosPath, sizeof(TCHAR)*(MAX_PATH + 1));
+    if (0 == GetProcessImageFileName(hProcess, tsFileDosPath, MAX_PATH + 1))
+    {
+        return;
+    }
+
+    // 获取Logic Drive String长度
+    UINT uiLen = GetLogicalDriveStrings(0, NULL);
+    if (0 == uiLen)
+    {
+        return;
+    }
+
+    PTSTR pLogicDriveString = new TCHAR[uiLen + 1];
+    ZeroMemory(pLogicDriveString, uiLen + 1);
+    uiLen = GetLogicalDriveStrings(uiLen, pLogicDriveString);
+    if (0 == uiLen)
+    {
+        delete[]pLogicDriveString;
+        return;
+    }
+
+    TCHAR szDrive[3] = TEXT(" :");
+    PTSTR pDosDriveName = new TCHAR[MAX_PATH];
+    PTSTR pLogicIndex = pLogicDriveString;
+
+    do
+    {
+        szDrive[0] = *pLogicIndex;
+        uiLen = QueryDosDevice(szDrive, pDosDriveName, MAX_PATH);
+        if (0 == uiLen)
+        {
+            if (ERROR_INSUFFICIENT_BUFFER != GetLastError())
+            {
+                break;
+            }
+
+            delete[]pDosDriveName;
+            pDosDriveName = new TCHAR[uiLen + 1];
+            uiLen = QueryDosDevice(szDrive, pDosDriveName, uiLen + 1);
+            if (0 == uiLen)
+            {
+                break;
+            }
+        }
+
+        uiLen = _tcslen(pDosDriveName);
+        if (0 == _tcsnicmp(tsFileDosPath, pDosDriveName, uiLen))
+        {
+            sFilePath.Format(_T("%s%s"), szDrive, tsFileDosPath + uiLen);
+            break;
+        }
+
+        while (*pLogicIndex++);
+    } while (*pLogicIndex);
+
+    delete[]pLogicDriveString;
+    delete[]pDosDriveName;
+}
+
+//1(未指定错误)
+#include "psapi.h"
+#pragma comment (lib, "Psapi.lib")
+
+DWORD aProcessesID[1024], cbNeeded = 0;
+if (!EnumProcesses( aProcessesID, sizeof(aProcessesID), &cbNeeded ) )
+{
+	TRACE("EnumProcesses error...");
+}
+else
+{
+	DWORD cProcesses = cbNeeded / sizeof(DWORD);
+	for (DWORD i = 0; i < cProcesses; i++ )
+	{
+		HMODULE hMods[1024];
+		HANDLE hProcess = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, aProcessesID[i]);
+		if (hProcess)
+		{
+			TCHAR szModName[MAX_PATH*100] = {0};
+			if ( GetModuleFileNameEx( hProcess, NULL, szModName, sizeof(szModName)))
+			{
+				TRACE(("模块名：%S \n"), szModName) ;
+			}
+			//CloseHandle( hProcess );
+		}
+	}
+}
+
+//2
+#include <tlhelp32.h>
+
+CString procName;//进程名
+DWORD iProcID=0;
+PROCESSENTRY32 pEntry={sizeof(PROCESSENTRY32)};
+HANDLE hSnapshot=CreateToolhelp32Snapshot(TH32CS_SNAPALL,0);//获得进程快照
+if(hSnapshot!=INVALID_HANDLE_VALUE)
+{
+    if(Process32First(hSnapshot,&pEntry))
+    {
+		while (Process32Next(hSnapshot, &pEntry))//遍历进程
+        {
+            if(lstrcmpi(procName, pEntry.szExeFile) == 0)//查到相应进程
+            {
+                iProcID=pEntry.th32ProcessID;//获取进程ID
+                CloseHandle(hSnapshot);
+                break;
+            }
+        }
+    }
+}  
+
+//获取指定进程所对应的PID,如果启动了
+DWORD GetProcessHandle(LPCTSTR pName)
+{
+	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (INVALID_HANDLE_VALUE == hSnapshot) {
+		return NULL;
+	}
+	PROCESSENTRY32 pe = { sizeof(pe) };
+	BOOL fOk;
+	for (fOk = Process32First(hSnapshot, &pe); fOk; fOk = Process32Next(hSnapshot, &pe)) {
+		if (!_tcscmp(pe.szExeFile, pName)) {
+			CloseHandle(hSnapshot);
+			return pe.th32ProcessID;
+		}
+	}
+	CloseHandle(hSnapshot);
+	return NULL;
+} 
+
+GetProcessTime				查看进程时间 
+GetProcessIoCounters		查看IO次数
+GetProcessImageFileName		返回内核格式的文件名
+
+//Windows作业（进程组），用于管理进程
+//创建进程函数
+	HANDLE MyCreateProcess(CString strExePath)
+	{
+		LPTSTR lpszCmdLine = new TCHAR[strExePath.GetLength()+1];
+		_tcscpy(lpszCmdLine, strExePath);
+
+		STARTUPINFO si = { sizeof(si) }; 
+		PROCESS_INFORMATION pi; 
+
+		si.dwFlags = STARTF_USESHOWWINDOW; 
+		si.wShowWindow = TRUE; //TRUE表示显示创建的进程的窗体
+		BOOL bRet = ::CreateProcess ( 
+			NULL,
+			lpszCmdLine, //在Unicode版本号中此參数不能为常量字符串，由于此參数会被改动	 
+			NULL, 
+			NULL, 
+			FALSE, 
+			CREATE_NEW_CONSOLE|CREATE_SUSPENDED, //启动时休眠 
+			NULL, 
+			NULL, 
+			&si, 
+			&pi); 
+
+		int error = GetLastError();
+		if(bRet) 
+		{ 
+			TRACE("新进程的进程ID号：%d /n", pi.dwProcessId); 
+			TRACE("新进程的主线程ID号：%d /n", pi.dwThreadId); 
+		} 
+		else
+		{
+			TRACE("新进程创建错误: code:%d /n",error );
+		}
+		
+		if (lpszCmdLine)
+			delete[] lpszCmdLine;
+
+		return pi.hProcess;
+	}
+
+	
+//添加进程到作业
+void AddProcessToJob()
+{
+	if (m_hJob != INVALID_HANDLE_VALUE)
+	{
+		//结束作业
+		TerminateJobObject( m_hJob, 0 );
+		//关闭Job
+		CloseHandle( m_hJob );
+		m_hJob = INVALID_HANDLE_VALUE;
+	}
+
+	//创建Job对象
+	CString strJobName = _T("MyJob");
+	m_hJob = CreateJobObject( NULL, strJobName);
+
+	//设置权限
+	JOBOBJECT_BASIC_LIMIT_INFORMATION jobli = {0};
+	jobli.PriorityClass = IDLE_PRIORITY_CLASS;
+	jobli.PerJobUserTimeLimit.QuadPart = 10000;
+	jobli.LimitFlags = JOB_OBJECT_LIMIT_JOB_TIME;
+	SetInformationJobObject(m_hJob, JobObjectBasicLimitInformation, &jobli, sizeof(jobli));
+	JOBOBJECT_BASIC_UI_RESTRICTIONS jobuir;
+	jobuir.UIRestrictionsClass = JOB_OBJECT_UILIMIT_NONE;
+	jobuir.UIRestrictionsClass |= JOB_OBJECT_UILIMIT_READCLIPBOARD;		//读剪切板
+	jobuir.UIRestrictionsClass |= JOB_OBJECT_UILIMIT_WRITECLIPBOARD;	//写剪切板
+	jobuir.UIRestrictionsClass |= JOB_OBJECT_UILIMIT_EXITWINDOWS;
+	jobuir.UIRestrictionsClass |= JOB_OBJECT_UILIMIT_HANDLES;
+	SetInformationJobObject(m_hJob, JobObjectBasicUIRestrictions, &jobuir, sizeof(jobuir));
+
+	//创建进程
+	CString strPaintExePath = _T("c:\\windows\\system32\\mspaint.exe");//画图程序
+	m_hPaintProcess = INVALID_HANDLE_VALUE;
+	m_hPaintThread = INVALID_HANDLE_VALUE;
+	BOOL bRet0 = MyCreateProcess(strPaintExePath,m_hPaintProcess,m_hPaintThread);
+	if (bRet0 && m_hPaintProcess!=INVALID_HANDLE_VALUE && m_hPaintThread!=INVALID_HANDLE_VALUE)
+	{
+		//将进程1加入作业
+		AssignProcessToJobObject(m_hJob, m_hPaintProcess );
+	}
+	CString strNotepadExePath = _T("c:\\windows\\system32\\notepad.exe");//记事本程序
+	m_hNotepadProcess = INVALID_HANDLE_VALUE;
+	m_hNotepadThread  = INVALID_HANDLE_VALUE;
+	BOOL bRet1 = MyCreateProcess(strNotepadExePath,m_hNotepadProcess,m_hNotepadThread);
+	if (bRet1 && m_hNotepadProcess!=INVALID_HANDLE_VALUE && m_hNotepadThread!=INVALID_HANDLE_VALUE)
+	{
+		//将进程2加入作业
+		AssignProcessToJobObject(m_hJob, m_hNotepadProcess );
+	}
+
+	if(bRet0 && bRet1)
+		AfxMessageBox(_T("添加进程到作业成功"));
+	else
+		AfxMessageBox(_T("添加进程到作业失败"));//可进行关闭作业操作
+}
+
+//启动作业里的进程
+void StartProcessInJob()
+{
+	//唤醒画图程序主线程
+	ResumeThread(m_hPaintThread);
+
+	//唤醒记事本程序主线程
+	ResumeThread(m_hNotepadThread);
+}
+
+//关闭作业里的进程
+void CloseProcessInJob()
+{
+	if (m_hJob != INVALID_HANDLE_VALUE)
+	{
+		//结束作业，会结束作业里的所有进程
+		TerminateJobObject( m_hJob, 0 );
+
+		//关闭Job
+		CloseHandle( m_hJob );
+		m_hJob = INVALID_HANDLE_VALUE;
+	}
+}
+
+QueryInformationJobObject		//查看作业限制外,查看作业信息， 包括总进程数、 活跃进程数、 总时间、 总IO次数、 进程ID列表
+
+//动态监视作业的情况，需要在创建作业时额外绑定完成端口，线程使用GetQueuedCompletionStatus监听端口的消息
+DWORD IOCPThread(PVOID lpParam); //完成端口线程
+{
+    BOOL bLoop = TRUE;
+    HANDLE hIocp = (HANDLE)lpParam;
+    DWORD dwReasonId = 0;
+    HANDLE hJob = NULL;
+    OVERLAPPED *lpOverlapped = {0};
+    while (bLoop)
+    {
+        BOOL bSuccess = GetQueuedCompletionStatus(hIocp, &dwReasonId, (PULONG_PTR)&hJob, &lpOverlapped, INFINITE);
+        if(!bSuccess)
+        {
+            return 0;
+        }
+
+        switch (dwReasonId)
+        {
+            case JOB_OBJECT_MSG_ABNORMAL_EXIT_PROCESS:
+                {
+                    //进程异常退出
+                    DWORD dwProcessId = (DWORD)lpOverlapped;
+                    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, dwProcessId);
+                    if(INVALID_HANDLE_VALUE != hProcess)
+                    {
+                        DWORD dwExit = 0;
+                        GetExitCodeProcess(hProcess, &dwExit);
+                        printf("进程[%08x]异常退出，退出码为[%04x]\n", dwProcessId, dwExit);
+                    }
+
+                }
+                break;
+            case JOB_OBJECT_MSG_ACTIVE_PROCESS_LIMIT:
+                {
+                    printf("同时活动的进程数达到上限\n");
+                }
+                break;
+            case  JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO:
+                {
+                    printf("没有活动的进程了\n");
+                }
+                break;
+
+            case JOB_OBJECT_MSG_END_OF_JOB_TIME:
+                {
+                    printf("作业对象CPU时间周期耗尽\n");
+                }
+                break;
+
+            case JOB_OBJECT_MSG_END_OF_PROCESS_TIME:
+                {
+                    DWORD dwProcessID = (DWORD)lpOverlapped;
+                    printf("进程[%04x]CPU时间周期耗尽\n", dwProcessID);
+                }
+                break;
+
+            case JOB_OBJECT_MSG_EXIT_PROCESS:
+                {
+                    DWORD dwProcessId = (DWORD)lpOverlapped;
+                    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, dwProcessId);
+                    if(INVALID_HANDLE_VALUE != hProcess)
+                    {
+                        DWORD dwExit = 0;
+                        GetExitCodeProcess(hProcess, &dwExit);
+                        printf("进程[%08x]正常退出，退出码为[%04x]\n", dwProcessId, dwExit);
+                    }
+                }
+                break;
+
+            case JOB_OBJECT_MSG_JOB_MEMORY_LIMIT:
+                {
+                    printf("作业对象消耗内存数量达到上限\n");
+                }
+                break;
+
+            case JOB_OBJECT_MSG_NEW_PROCESS:
+                {
+                    DWORD dwProcessID = (DWORD)lpOverlapped;
+                    printf("进程[ID:%u]加入作业对象[h:0x%08X]\n",dwProcessID,hJob); 
+                }
+                break;
+
+            case JOB_OBJECT_MSG_PROCESS_MEMORY_LIMIT:
+                {
+                    DWORD dwProcessID = (DWORD)lpOverlapped;
+                    printf("进程[%04x]消耗内存数量达到上限\n",dwProcessID);
+                }
+                break;
+
+            default:
+                bLoop = FALSE;
+                break;
+
+        }
+    }
+}
+
+1.创建完成端口
+    HANDLE hIocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 1);
+    if(hIocp == INVALID_HANDLE_VALUE)
+    {
+        return 0;
+    }
+
+2.启动监视进程
+    CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)IOCPThread, (PVOID)hIocp, 0, NULL);
+
+3.将作业对象与完成端口绑定
+    JOBOBJECT_ASSOCIATE_COMPLETION_PORT jacp = {0};
+    jacp.CompletionKey = hJob;
+    jacp.CompletionPort = hIocp;
+    SetInformationJobObject(hJob, JobObjectAssociateCompletionPortInformation, &jacp, sizeof(jacp));
+
+
+//GetCurrentProcess、 GetCurrentThread返回的都是伪句柄，可以用ID来代替句柄
+获取实句柄可以使用下面两种方法
+1.DuplicateHandle
+功能：将一个进程内的伪句柄，转化为可以用来进程间通信的实句柄
+
+2.先GetCurrentThreadID， 再OpenThread
+
+
+//每个线程都有⼀个挂起计数， 当计数⾮0的时候， 该线程不参与线程调度
+SuspendThread可以增加计数，ResumeThread 可以减少计数，两者都返回新的挂起计数
+
+//为程序添加调试者程序
+DebugActiveProcess——附加程序，成为目标程序的调试者
+WaitForDebugEvent——接收调试事件
+GetProcAddress——获取要下断的目标地址
+GetThreadContext——获取上下文，以此来获取对应数据，如弹窗标题内容等。
+SetThreadContext——上下文设置，用来恢复原来的地址
+ContinueDebugEvent——让程序继续运行
+ReadProcessMemory——读取目标相关数据
+WriteProcessMemory——更改目标数据，如写入CC断点，修改弹窗标题，内容等。
+VirtualProtectEx——更改虚拟内存权限，若无法写入数据可使用
+
+//SwitchToThread允许执行低优先级线程，Sleep会立即重新调度主调线程，即使低优先级线程会处于饥饿状态
+
+//用于计时， 最基本的有clock、 GetTickCount、 timeGetTime等；为了地提高精度，可以使用QueryPerformanceCounter； 
+获取线程和进程的执行时间（不含线程调度中断的时间和Sleep、 Wait的时间）， 可以使用GetThreadTimes、GetProcessTimes等
+
+//SetPriorityClass设置进程的优先级类，SetThreadPriority设置线程的相对优先级，两者共同决定线程的实际优先级（0-31）
+//设置是否允许系统自动提升优先级：SetProcessPriorityBoost、 SetThreadPriorityBoost
+
+//Interlocked系列互锁函数之一，常用于多线程编程(原子操作函数)。类似的还有下面的几个：
+//增减
+（1） LONG InterlockedIncrement(IN OUT LONG volatile *lpAddend);
+lpAddend为长整型变量的地址，返回值为+1后的值。这个函数的主要作用是原子性自增(相当于++操作)。
+（2） LONG InterlockedDecrement(IN OUT LONG volatile *lpAddend);
+lpAddend为长整型变量的地址，返回值为-1后的值。这个函数的主要作用是原子性自减(相当于--操作)。
+（3） LONG InterlockedExchangeAdd( LPLONG Addend, LONG Increment );
+Addend为长整型变量的地址，Increment为想要在Addend指向的长整型变量上增加的数值（可以是负数）。这个函数的主要作用是保证这个加操作为一个原子访问。
+//交换
+（1） LONG InterlockedExchange( LPLONG Target, LONG Value );
+（2） PVOID InterlockedExchangePointer( PVOID *Target, PVOID Value );
+用第二个参数的值取代第一个参数指向的值。函数返回值为原始值。
+//比较交换
+（1） LONG InterlockedCompareExchange(
+LPLONG Destination, LONG Exchange, LONG Comperand );
+（2） PVOID InterlockedCompareExchangePointer(
+PVOID *Destination, PVOID Exchange, PVOID Comperand );
+如果第三个参数与第一个参数指向的值相同，那么用第二个参数取代第一个参数指向的值。函数返回值为原始值
+
+//CRITICAL_SECTION lock;
+//InitializeCriticalSection(&lock) 、 EnterCriticalSection(&lock)[进入锁] 、 LeaveCriticalSection(&lock)[离开锁] 、 DeleteCriticalSection(&lock)[释放锁]
+//InitializeCriticalSectioAndSpinCount和InitializeCriticalSection的区别：前者会先尝试再调用WaitForsingleObject，避免多个线程同时调用WaitForsingleObject，资源开销过大
+//关键段不区分读写，只是读资源的话，可以通过拷贝资源的方式来减少锁的使用时间
+
+//SRWLOCK lock;
+//InitializeSRWLock(&lock) 、 AcquireSRWLockShared(&lock)[申请读锁] 、 AcquireSRWLockExclusive(&lock)[申请写锁] 、 ReleaseSRWLockExclusive(&lock)[释放锁]
+与关键段（CriticalSection）相比，SRWLock缺乏下面两个特性：
+1)不存在TryEnter(Shared/Exclusive)SRWLock 之类的函数：如果锁已经被占用，那么调用AcquireSRWLock(Shared/Exclusive) 会阻塞调用线程
+2)不能递归地调用SRWLOCK。也就是说，一个线程不能为了多次写入资源而多次锁定资源，然后再多次调用ReleaseSRWLock* 来释放对资源的锁定
+
+//执行性能从高到低： 无锁、 volatile、 Interlocked、 SRW、 CRITICAL_SECTION、内核对象(WaitForSingleObject)
+
+//WaitForSingleObject		等待一个内核对象变为已触发状态返回
+//WaitForMulitpleObjects	等待多个内核对象变为已触发状态，可选择单个触发返回/全部触发返回
+//SignalObjectAndWait		触发一个对象，并等待另一个对象触发返回
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+GetFileType可以返回设备的类型： 
+FILE_TYPE_DISK-磁盘文件
+FILE_TYPE_CHAR-字符文件，包括控制台和打印机等
+FILE_TYPE_PIPE-命名管道或匿名管道
+
+GetFileSizeEx()				获取文件逻辑大小（压缩前的大小）
+GetCompressedFileSize()		获取文件物理大小（压缩后的大小）
+//GetFileSizeEx和GetCompressedFileSize返回不等，则表明文件被压缩
+SetEndOfFile()				设置文件大小（可减小文件的大小）
+
+//将文件的大小强制设为1024，可以像下面这样使用
+1) HANDLE hFile = CreateFile(...);
+2) LARGE_INTEGER liDistanceToMove;
+3) liDistanceToMove.QuadPart = 1024;
+4) SetFilePointerEx(hFile, liDistanceToMove, NULL, FILE_BEGIN);
+5) SetEndOfFile(hFile);
+6) CloseHandle(hFile);
+
+
+////////////////////////////////////////////////////定时回调函数 CreateTimerQueueTimer
+phNewTimer		用来接收创建好的计时器对象句柄的指针
+hTimerQueue		计时器线程池对象。为NULL时，使用默认的计时器线程池，此时可以不需调用CreateTimerQueue来创建线程池对象。
+pfnCallback		新计时器对象的回调函数。函数原型：Void WINAPI WaitOrTimerCallback(PVOID pvContext,BOOL fTimerOrWaitFired);其中的fTimerOrWaitFired为TRUE时，表示调用回调函数时，计时器己经触发。
+pvContext		传给回调函数的额外参数
+dwDueTime		预计从调用该函数开始后，多少毫秒后第一次调用回调函数。如果为0，只有可能，就会调用回调函数。
+dwPeriod		调用回调函数的周期（毫米数）。如果为0，表示一个单步计时器，即回调函数只被调用一次。
+dwFlags			用于指明线程池中的线程在什么条件下调用这个回调函数。该参数的意义与QueueUserWorkItem函数相应的参数相同
+注：计时器在dwDueTime后会第1次被触发，以后每经过dwPeriod时间后，周期性地触发。
+每次触发时都会调用回调函数，哪怕前一个回调函数还没执行完（会启动另一个线程来调用该回调函数）
+
+//1
+HANDLE	m_hTimerQueue = NULL;
+HANDLE	m_hTimerQueueTimer = NULL;
+
+//2.TimerRoutine为回调函数
+static VOID CALLBACK TimerRoutine(PVOID lpParam, BOOLEAN TimerOrWaitFired)
+{
+	//lpParam为传过来的参数
+}
+
+//3.启动定时回调
+if (m_hTimerQueue == NULL && m_hTimerQueueTimer == NULL)
+{
+	m_hTimerQueue = CreateTimerQueue();
+	if (m_hTimerQueue != NULL)
+	{
+		//0 ms后执行第一次，每1000ms循环执行
+		if (!CreateTimerQueueTimer(&m_hTimerQueueTimer, m_hTimerQueue, TimerRoutine, this, 0, 1000, WT_EXECUTEDEFAULT))
+		{
+			m_hTimerQueue = NULL;
+			m_hTimerQueueTimer = NULL;
+		}
+	}
+	else
+	{
+		m_hTimerQueue = NULL;
+		m_hTimerQueueTimer = NULL;
+	}
+}
+
+//3.支持修改计时器周期
+DWORD dwDueTime = 0;
+DWORD dwNewPeriod = 2000；
+ChangeTimeQueueTimer(m_hTimerQueue, m_hTimerQueueTimer, dwDueTime, dwNewPeriod);
+
+//4.停止定时回调
+if (m_hTimerQueueTimer != NULL)
+	DeleteTimerQueueTimer(m_hTimerQueue, m_hTimerQueueTimer, INVALID_HANDLE_VALUE);
+if (m_hTimerQueue != NULL)
+	DeleteTimerQueueEx(m_hTimerQueue, INVALID_HANDLE_VALUE);
+m_hTimerQueueTimer = NULL;
+m_hTimerQueue = NULL;
+
+////////////////////////////////////////////////////等待内核对象为触发态时调用
+//1.回调函数
+VOID NTAPI WaitForThreadExit(PVOID, BOOLEAN)
+{
+	std::cout << "thread exit" << std::endl;
+}
+
+//2
+HANDLE g_testEvent = CreateEvent(NULL,TRUE,FALSE,NULL);//初始状态为未触发，在合适位置使用SetEvent进行触发
+
+//3.等待事件触发后调用函数
+HANDLE hWait = NULL;
+if (RegisterWaitForSingleObject(&hWait, g_testEvent, WaitForThreadExit, NULL, 5000, WT_EXECUTEONLYONCE|WT_EXECUTEINWAITTHREAD) == FALSE)//事件为已触发或超时返回，会调用WaitForThreadExit
+{
+	std::cout << "RegisterWaitForSingleObject fail, GetLastError " << GetLastError() << std::endl;
+}
+
+//4，退出时关闭（不能用CloseHandle）
+if (hWait != NULL)
+{
+	UnregisterWaitEx(hWait, INVALID_HANDLE_VALUE); //使用INVALID_HANDLE_VALUE表示阻塞等待删除完成，可能造成死锁；使用NULL表示不接受通知
+	hWait = NULL;
+}
+
+win2000+ 用法：
+1）异步调用函数		 （QueueUserWorkItem）
+2）定时器回调		 （CreateTimerQueueTimer）
+3）内核对象触发后回调（RegisterWaitForSingleObject）
+4）内置IOCP实现		 （BindIoCompletionCallback）
+Visita+ 用法：
+1）异步调用函数		 （TrySubmitThreadpoolCallback、 CreateThreadpoolWork） 
+2）定时器回调		 （CreateThreadpoolTimer） 
+3）内核对象触发后回调（CreateThreadpoolWait） 
+4）内置IOCP实现		 （CreateThreadpoolIo） 
+
+/////////////////////////////////////////////////////纤程的使用
+//使用纤程完成文件拷贝
+
+//纤程函数不能退出，一个纤程退出，该纤程所在的线程将退出，该线程中的所有其它纤程也将终止。
+VOID CALLBACK ReadFiber(LPVOID lpParam)
+{
+	//拷贝文件
+	while (TRUE)
+	{
+		LPFIBER_STRUCT pFS = (LPFIBER_STRUCT)lpParam;
+		TRACE("切换到[%s]纤程\n", (CString)pFS->strParam);
+		DWORD dwReadLen = 0;
+		ZeroMemory(g_lpBuffer, COPY_LENGTH);
+		ReadFile(pFS->hFile, g_lpBuffer, COPY_LENGTH, &dwReadLen, NULL);
+		SwitchToFiber(g_lpFiber[WRITE_FIBER]);
+		if(dwReadLen < COPY_LENGTH)//读取不足512B,已经读完
+		{
+			break;
+		}
+	}
+
+	SwitchToFiber(g_lpFiber[PRIMARY_FIBER]);
+}
+
+VOID CALLBACK WriteFiber(LPVOID lpParam)
+{
+	while (TRUE)
+	{
+		LPFIBER_STRUCT pFS = (LPFIBER_STRUCT)lpParam;
+		TRACE("切换到[%s]纤程\n", (CString)pFS->strParam);
+		DWORD dwWriteLen = 0;
+		WriteFile(pFS->hFile, g_lpBuffer, COPY_LENGTH, &dwWriteLen, NULL);
+		SwitchToFiber(g_lpFiber[READ_FIBER]);
+		if(dwWriteLen < COPY_LENGTH)//写入不足512B,已经写完
+		{
+			break;
+		}
+	}
+
+	SwitchToFiber(g_lpFiber[PRIMARY_FIBER]);
+}
+
+
+#define PRIMARY_FIBER 	0
+#define WRITE_FIBER 	1
+#define READ_FIBER 		2
+#define FIBER_COUNT 	3
+#define COPY_LENGTH 	512
+typedef struct _tagFIBER_STRUCT
+{
+	DWORD	dwFiberHandle;
+	HANDLE	hFile;
+	CString strParam;
+}FIBER_STRUCT, *LPFIBER_STRUCT;
+
+char *g_lpBuffer = NULL;
+LPVOID g_lpFiber[FIBER_COUNT] = {};
+int CopyFileByFiber()
+{
+	g_lpBuffer = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, COPY_LENGTH);
+	FIBER_STRUCT fs[FIBER_COUNT] = {0};
+
+	TCHAR szDestPath[MAX_PATH] = _T("");
+	TCHAR szSrcPath[MAX_PATH] = _T("");
+	StringCchCat(szSrcPath, MAX_PATH, _T("D:\\Music\\1.mp4"));
+	StringCchCat(szDestPath, MAX_PATH, _T("C:\\Soft\\1_Copy.mp4"));
+
+	HANDLE hSrcFile = CreateFile(szSrcPath, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+	HANDLE hDestFile = CreateFile(szDestPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+
+	fs[PRIMARY_FIBER].dwFiberHandle = 0x00001234;
+	fs[PRIMARY_FIBER].hFile = INVALID_HANDLE_VALUE;
+	fs[PRIMARY_FIBER].strParam = _T("");
+
+	fs[WRITE_FIBER].dwFiberHandle = 0x12345678;
+	fs[WRITE_FIBER].hFile = hDestFile;
+	fs[WRITE_FIBER].strParam = CString(_T("Write"));
+
+	fs[READ_FIBER].dwFiberHandle = 0x78563412;
+	fs[READ_FIBER].hFile = hSrcFile;
+	fs[READ_FIBER].strParam = CString(_T("Read"));
+
+	g_lpFiber[PRIMARY_FIBER] = ConvertThreadToFiber(&fs[PRIMARY_FIBER]); 							//当前线程变为主纤程
+	g_lpFiber[READ_FIBER] = CreateFiber(0, (LPFIBER_START_ROUTINE)ReadFiber, &fs[READ_FIBER]);		//创建读纤程
+	g_lpFiber[WRITE_FIBER] = CreateFiber(0, (LPFIBER_START_ROUTINE)WriteFiber, &fs[WRITE_FIBER]);	//创建写纤程
+
+	//切换到读纤程
+	SwitchToFiber(g_lpFiber[READ_FIBER]);
+
+	//删除纤程
+	DeleteFiber(g_lpFiber[WRITE_FIBER]);
+	DeleteFiber(g_lpFiber[READ_FIBER]);
+
+	CloseHandle(fs[READ_FIBER].hFile);
+	CloseHandle(fs[WRITE_FIBER].hFile);
+
+	//主纤程变回线程
+	ConvertFiberToThread();
+	return 0;
+}
+
+进程：是操作系统资源分配的基本单位，比如内存、打开文件、网络IO，分配了独立的内存空间
+线程：是操作系统资源调度的基本单位，cpu分配的基本单位
+纤程：是用户态的线程，是线程中的线程，切换和调度不需要经过OS(操作系统)，轻量级的线程
+
+//////////////////////////////////////////////////////////系统信息API
+GetSystemInfo				获取系统信息
+IsWow64Process				64位系统中的32位程序
+
+//系统位数
+SYSTEM_INFO si; 
+GetNativeSystemInfo(&si); 
+if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 || si.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_IA64 ) 
+{ 
+    //64位操作系统 
+} 
+else 
+{ 
+    // 32位操作系统 
+}
+
+//处理器信息
+GetLogicalProcessorInformation
+
+//内存信息
+GlobalMemoryStatus
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

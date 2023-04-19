@@ -1,0 +1,11 @@
+explain == desc
+delete in 可能会导致查询不走索引，具体看type是ref（索引）还是all（全表）
+================================================
+
+//原sql
+delete FROM SBT_EVENTINFOEX WHERE STRSTORYID IN (SELECT STRSTORYID FROM SBT_STORYINFOEX WHERE STRLISTID = '100000001');
+
+//新sql：使用inner join
+delete t_EVENT FROM SBT_EVENTINFOEX t_EVENT inner JOIN  SBT_STORYINFOEX t_STORY ON  t_EVENT.STRSTORYID=t_STORY.STRSTORYID AND t_STORY.STRLISTID='100000001';
+//新sql：表加别名
+delete t_EVENT from SBT_EVENTINFOEX as t_EVENT where t_EVENT.STRSTORYID in (SELECT STRSTORYID FROM SBT_STORYINFOEX WHERE STRLISTID = '100000001');

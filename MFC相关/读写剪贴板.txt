@@ -1,0 +1,36 @@
+//读取剪贴板
+if(OpenClipboard()) //打开剪贴板，若打开就独占
+{
+	if(IsClipboardFormatAvailable(CF_TEXT))
+	{
+		HANDLE hClip;
+		hClip=GetClipboardData(CF_TEXT); //获取剪贴板数据
+		
+		char *pBuf;
+		pBuf=(char*)GlobalLock(hClip);
+		LPCTSTR pBuffer = char2TCAHR(pBuf);
+
+		GlobalUnlock(hClip);
+
+		SetDlgItemText(IDC_EDIT1,pBuffer);
+
+		CloseClipboard();
+	}
+}
+
+//写入剪贴板
+if(OpenClipboard()) //打开剪贴板，若打开就独占
+{
+	CString str;
+	HANDLE hClip;
+	char *pBuf;
+	EmptyClipboard();//清空剪贴板并让当前窗口成为剪贴板的拥有者
+	
+	GetDlgItemText(IDC_EDIT_SEND,str);//获取编辑框文本
+	hClip=GlobalAlloc(GMEM_MOVEABLE,str.GetLength()+1);//从堆上分配指定数目的字节
+	pBuf=(char*)GlobalLock(hClip); //锁定内存对象，维护一个锁计数加一，不可移动除非设置GlobalReAlloc
+	strcpy(pBuf,str);
+	GlobalUnlock(hClip);//解锁内存对象，GlobalUnlock将锁计数减一
+	SetClipboardData(CF_TEXT,hClip);//以指定的剪贴板格式向剪贴板中放置数据
+	CloseClipboard(); //关闭剪贴板
+}

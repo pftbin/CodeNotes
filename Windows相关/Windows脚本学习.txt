@@ -1,0 +1,282 @@
+!!!!注意!!!!
+txt编辑完成，修改为bat前，需用ANSI编码，否则汉字会乱码
+/****************************************批处理常用开始**************************************/
+@echo off
+title 批处理功能名称
+setlocal EnableDelayedExpansion
+:: 启用延迟变量扩充
+
+/*************************************判断是否是数字*****************************************/
+::逻辑：判断变量里是否有0-9之外的字符
+set /p DelayTime=请输入倒计时时间(S)：
+SET "var="&for /f "delims=0123456789" %%i in ("!DelayTime!") do set var=%%i
+if defined var (echo !DelayTime! isnot numeric) else (echo !DelayTime! is numeric)
+
+/******************************************************************************/
+
+dcomcnfg-------打开系统组件服务
+dxdiag---------检查DirectX信息
+/********************************WINDOWS自带程序**********************************/
+开始→运行→命令集锦 [start + *]
+
+winver---------检查Windows版本
+wmimgmt.msc----打开windows管理体系结构(WMI)
+wupdmgr--------windows更新程序
+wscript--------windows脚本宿主设置
+write----------写字板
+winmsd---------系统信息
+wiaacmgr-------扫描仪和照相机向导
+winchat--------XP自带局域网聊天
+
+mem.exe--------显示内存使用情况
+Msconfig.exe---系统配置实用程序
+mplayer2-------简易widnows media player
+mspaint--------画图板
+mstsc----------远程桌面连接
+mplayer2-------媒体播放机
+magnify--------放大镜实用程序
+mmc------------打开控制台
+mobsync--------同步命令
+
+drwtsn32------ 系统医生
+devmgmt.msc--- 设备管理器
+dfrg.msc-------磁盘碎片整理程序
+diskmgmt.msc---磁盘管理实用程序
+ddeshare-------打开DDE共享设置
+dvdplay--------DVD播放器
+
+net stop messenger-----停止信使服务
+net start messenger----开始信使服务
+notepad--------打开记事本
+nslookup-------网络管理的工具向导
+ntbackup-------系统备份和还原
+narrator-------屏幕"讲述人"
+ntmsmgr.msc----移动存储管理器
+ntmsoprq.msc---移动存储管理员操作请求
+netstat -an----(TC)命令检查接口
+
+syncapp--------创建一个公文包
+sysedit--------系统配置编辑器
+sigverif-------文件签名验证程序
+sndrec32-------录音机
+shrpubw--------创建共享文件夹
+secpol.msc-----本地安全策略
+syskey---------系统加密，一旦加密就不能解开，保护windows xp系统的双重密码
+services.msc---本地服务设置
+Sndvol32-------音量控制程序
+sfc.exe--------系统文件检查器
+sfc /scannow---windows文件保护
+
+tsshutdn-------60秒倒计时关机命令
+tourstart------xp简介（安装完成后出现的漫游xp程序）
+taskmgr--------任务管理器
+
+eventvwr-------事件查看器
+eudcedit-------造字程序
+explorer-------打开资源管理器
+
+
+packager-------对象包装程序
+perfmon.msc----计算机性能监测程序
+progman--------程序管理器
+
+regedit.exe----注册表
+rsop.msc-------组策略结果集
+regedt32-------注册表编辑器
+rononce -p ----15秒关机
+regsvr32 /u *.dll----停止dll文件运行
+regsvr32 /u zipfldr.dll------取消ZIP支持
+
+cmd.exe--------CMD命令提示符
+chkdsk.exe-----Chkdsk磁盘检查
+certmgr.msc----证书管理实用程序
+calc-----------启动计算器
+charmap--------启动字符映射表
+cliconfg-------SQL SERVER 客户端网络实用程序
+Clipbrd--------剪贴板查看器
+conf-----------启动netmeeting
+compmgmt.msc---计算机管理
+cleanmgr-------垃圾整理
+ciadv.msc------索引服务程序
+
+osk------------打开屏幕键盘
+odbcad32-------ODBC数据源管理器
+oobe/msoobe /a----检查XP是否激活
+lusrmgr.msc----本机用户和组
+logoff---------注销命令
+
+iexpress-------木马捆绑工具，系统自带
+Nslookup-------IP地址侦测器
+fsmgmt.msc-----共享文件夹管理器
+utilman--------辅助工具管理器
+gpedit.msc-----组策略
+
+
+
+/******************************************************************************/
+%windir% 		当前启动系统所在的目录，默认情况下通常是 C:\WINDOWS
+%DATE:~0,10% 	当天的日期，比如2007-11-30
+:EOF / :eof		表示bat文件结尾处的标签
+dir				列出当前文件夹的文件（可指定后缀）
+fc				比较两个文件
+%errorlevel%	命令运行结束返回值，0为执行成功，1为执行失败
+type			显示文件内容，显示所有内容
+more			显示文本内容，只显示一个屏幕的内容，如内容有剩余，以百分比显示
+con 			代表屏幕
+prn 			代表打印机
+ver				显示系统版本
+tree			以树的形式显示目录的文件
+mstsc			桌面远程连接(远程桌面)
+telnet			终端远程连接
+
+
+///////////////////////////////////////////////////////////////////////
+copy con 1.txt 
+::从屏幕上等待输入，按Ctrl+Z 结束输入，输入内容保存到 1.txt
+
+copy 1.txt + 2.txt 3.txt 
+::合并1.txt 和 2.txt保存到为3.txt
+::不指定3.txt,则保存到1.txt 
+
+copy 1.txt +
+::复制文件到自己，实际上是修改了文件日期
+
+///////////////////////////////////////////////////////////////////////
+find "abc" C:\Users\sobey\Desktop\test.txt
+::查找含abc的行，如果找不到，设errorlevel返回码为1 
+
+find /i "abc" C:\Users\sobey\Desktop\test.txt
+::查找含abc的行，忽略大小写
+
+find /c "abc" C:\Users\sobey\Desktop\test.txt
+::显示含abc的行的数量
+
+///////////////////////////////////////////////////////////////////////
+echo 		加一段文字，可以显示出这段文字
+echo off 	表示这以后的所有命令本身不再显示，直到后面有 echo on 的出现。
+@ 			只是让当前这一行命令本身不显示
+>nul 		可以让该命令的输出不显示
+
+::   	注释这一行
+rem 	后面跟上一段文字，在批处理中可以作为注释用
+title 	后面跟字符串可以改变当前命令提示符的标题名称
+
+set /a 变量赋一个实数值，例如 set /a var=48；
+set /p 变量值由用户输入，可以加提示信息，例如:[var是变量名] set /p var=请输入一些文字：
+注意：
+默认变量不能二次赋值，除非
+1.使用 <setlocal EnableDelayedExpansion> 开启延时变量扩充功能
+2.使用 <!变量!> 而不是 <%变量%> 
+
+%变量A%  表示对变量A进行复制，结果可作为变量进行二次修改，如
+替换: %变量A:A=a%，新变量的结果==变量A中的A替换成a
+删除：%变量A:~m,n%，新变量的结果==只取变量A中的第m位后的n个字符（-m表示从后面开始计数，-n表示剩n位不取）
+
+$变量A	 表示对变量A进行取值
+
+goto、call、start
+goto 	跳到指定标签， <:标签名>，例如 goto :标签1 
+call 	和goto类似，但call执行结束后（到EOF处），还会回头继续执行call下一条命令； 
+		call还用于运行其他bat文件，此时当前bat等待call完成再继续执行
+start	打开exe文件/打开网页...
+ren		重命名文件
+>		输出到某设备/文件（覆盖重写）
+>>		输出到某设备/文件（追加写入）
+
+%1 表示运行bat时传入的第一个参数
+%2 表示运行bat时传入的第二个参数...
+注意：call 和 start 后可跟参数，goto 后不能跟参数
+
+///////////////////////////////if////////////////////////////////////
+if-else 使用(), if not 表示某条件不成立
+例如：
+if %变量% == 1 (
+	echo 这是if语句输出
+) else (
+	echo 这是else语句输出
+)
+注意：
+1.关键字后需加空格
+2.if 和 ( 需同行
+3. )、else、( 三者需同行
+
+if exist 		判断文件是否存在
+if defined		判断变量/环境变量是否存在
+
+
+///////////////////////////////for////////////////////////////////////
+一般格式：
+for %i in (*.*) do (
+@echo %i
+)
+
+注意：批处理文件中应使用 %% 代替 %, 因为%是转义字符
+简单功能bat：
+<批量重命名文件>
+@echo off
+setlocal EnableDelayedExpansion
+set /a num=1
+for %%i in (D:\test\*.txt) do (
+@使用 !num! 使其能被多次赋值
+ren "%%i" !num!.txt				
+set /a num+=1
+)
+
+for /l  可指定变量 初始值、自增/自减、结束值(可等于)
+例如：
+for /l %i in (0,2,10) do (
+	echo %i 
+	@i的值依次为 0/2/4/6/8/10
+)
+
+for /f  对文件、字符串、命令输出结果进行循环 [Filter]
+例如：
+for /f "skip=2 tokens=2,4-6  eol=N delims=e usebackq" %%i in ("文字筛选.txt") do (
+echo %%i
+)
+skip=2 表示前两行被跳过
+tokens=2,4-6 表示提取每行的第2个、以及第4到6个单词
+eol=N 表示当此行的首字母为 N 时，就忽略该行
+delims=e 表示不再以空格区分每个词，而是以字母 e 作为间隔
+usebackq 表示双引号里的东西是文件名而不是字符串
+
+
+//////////////////////////////////////&、&&、||////////////////////////////////////////
+& 		只表示连接两条命令，没有逻辑与、逻辑或的意义
+|		将左边命令的结果作为右边命令的参数
+&&		逻辑与，前面命令为真才会执行后面命令
+||		逻辑或，前面命令为假才会执行后面命令
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,418 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (P.R.C.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#include ""res\\BurningToolGOSDCreator.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""     // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\BurningToolGOSDCreator.ico"
+IDI_ICON1               ICON                    "res\\zoom.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG_CREATOR DIALOGEX 0, 0, 506, 289
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_VISIBLE | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Load img",IDC_BUTTON_LOAD,184,255,37,14
+    PUSHBUTTON      "Gen",IDC_BUTTON_GEN,225,255,37,14
+    CONTROL         "",IDC_STATIC_SOURCE,"Static",SS_BLACKFRAME,7,20,150,120
+    CONTROL         "",IDC_STATIC_TARGET,"Static",SS_BLACKFRAME,7,159,150,120
+    GROUPBOX        "Image Info",IDC_STATIC,183,8,118,63
+    GROUPBOX        "GOSD Setting",IDC_STATIC,184,74,118,177
+    PUSHBUTTON      "Reset",IDC_BUTTON_RESET,265,255,37,14
+    LTEXT           "Width:",IDC_STATIC,196,28,39,8
+    LTEXT           "Height:",IDC_STATIC,196,49,39,8
+    LTEXT           "GOSD Size:",IDC_STATIC,196,96,39,8
+    LTEXT           "Bit_Mode:",IDC_STATIC,196,115,39,8
+    LTEXT           "Color Index",IDC_STATIC,240,140,39,8
+    EDITTEXT        IDC_EDIT_WIDTH,237,26,49,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT_HEIGHT,237,47,49,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT_GOSD_SIZE,237,94,49,14,ES_AUTOHSCROLL | ES_READONLY
+    COMBOBOX        IDC_COMBO_BIT_MODE1,237,113,49,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Preview",IDC_BUTTON_PREVIEW,218,233,50,14
+    PUSHBUTTON      "Save GOSD Pattern",IDC_BUTTON_SAVEGOSD,345,163,119,63
+    PUSHBUTTON      "Color0",IDC_BUTTON_COLOR0,232,159,50,14
+    PUSHBUTTON      "Color1",IDC_BUTTON_COLOR1,232,177,50,14
+    PUSHBUTTON      "Color2",IDC_BUTTON_COLOR2,232,195,50,14
+    PUSHBUTTON      "Color3",IDC_BUTTON_COLOR3,232,213,50,14
+    LTEXT           "0:",IDC_STATIC_COLOR0,209,162,8,8
+    LTEXT           "1:",IDC_STATIC_COLOR1,209,180,8,8
+    LTEXT           "2:",IDC_STATIC_COLOR2,209,198,8,8
+    LTEXT           "3:",IDC_STATIC_COLOR3,209,216,8,8
+    PUSHBUTTON      "Apply to GOSD Parameters",IDC_BUTTON_APPLYGOSD,345,39,119,63
+    PUSHBUTTON      "::",IDC_BUTTON_DRAG0,281,159,12,14,BS_FLAT
+    PUSHBUTTON      "::",IDC_BUTTON_DRAG1,281,177,12,14,BS_FLAT
+    PUSHBUTTON      "::",IDC_BUTTON_DRAG2,281,195,12,14,BS_FLAT
+    PUSHBUTTON      "::",IDC_BUTTON_DRAG3,281,213,12,14,BS_FLAT
+    LTEXT           "Source image",IDC_STATIC,58,11,50,8
+    LTEXT           "Preview image",IDC_STATIC,58,149,50,8
+    PUSHBUTTON      "",IDC_BUTTON_EQUAL1,129,124,26,14,BS_ICON
+    PUSHBUTTON      "",IDC_BUTTON_EQUAL2,129,263,26,14,BS_ICON
+END
+
+IDD_DIALOG_PARAMETER DIALOGEX 0, 0, 509, 408
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Description",IDC_STATIC,14,340,354,50
+    LTEXT           "1.This is Descrition",IDC_STATIC_DESCTEXT,23,353,336,30
+    GROUPBOX        "Configure",IDC_STATIC,15,8,184,176
+    LTEXT           "Enable",IDC_STATIC,32,25,88,8
+    LTEXT           "GPIO[15~08]",IDC_STATIC,31,187,46,8,NOT WS_VISIBLE
+    LTEXT           "GPIO[07~00]",IDC_STATIC,32,44,46,8
+    LTEXT           "Trig_Mode",IDC_STATIC,32,64,88,8
+    LTEXT           "Bit_Mode",IDC_STATIC,32,85,88,8
+    LTEXT           "Scale_Value",IDC_STATIC,32,106,88,8
+    LTEXT           "Backgnd_Tie_YUV",IDC_STATIC,32,125,88,8
+    LTEXT           "Resolution_X",IDC_STATIC,32,146,88,8
+    LTEXT           "Resolution_Y",IDC_STATIC,32,163,46,8
+    COMBOBOX        IDC_COMBO_ENABLE,110,23,67,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_CHECK0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,182,43,9,10
+    CONTROL         "",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,169,43,9,10
+    CONTROL         "",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,43,9,10
+    CONTROL         "",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,143,43,9,10
+    CONTROL         "",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,130,43,9,10
+    CONTROL         "",IDC_CHECK5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,117,43,9,10
+    CONTROL         "",IDC_CHECK6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,104,43,9,10
+    CONTROL         "",IDC_CHECK7,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,91,43,9,10
+    CONTROL         "",IDC_CHECK8,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,181,189,9,10
+    CONTROL         "",IDC_CHECK9,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,168,189,9,10
+    CONTROL         "",IDC_CHECK10,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,155,189,9,10
+    CONTROL         "",IDC_CHECK11,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,142,189,9,10
+    CONTROL         "",IDC_CHECK12,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,129,189,9,10
+    CONTROL         "",IDC_CHECK13,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,116,189,9,10
+    CONTROL         "V",IDC_CHECK14,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,103,189,9,10
+    CONTROL         "V",IDC_CHECK15,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,90,189,9,10
+    COMBOBOX        IDC_COMBO_TRIGMODE,110,62,67,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_BITMODE2,110,82,67,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_SCALE,110,102,67,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_BK_TIE_YUV,110,122,67,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT_RES_X,110,142,67,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT_RES_Y,110,162,67,14,ES_AUTOHSCROLL | ES_NUMBER
+    GROUPBOX        "Position",IDC_STATIC,16,197,184,125
+    LTEXT           "Start_X",IDC_STATIC,31,218,46,8
+    LTEXT           "Start_Y",IDC_STATIC,31,235,46,8
+    LTEXT           "Size_W",IDC_STATIC,31,258,46,8
+    LTEXT           "Size_H",IDC_STATIC,31,275,46,8
+    EDITTEXT        IDC_EDIT_STARTX,109,214,67,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT_STARTY,109,232,67,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT_SIZEW,109,254,67,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT_SIZEH,109,272,67,14,ES_AUTOHSCROLL | ES_NUMBER
+    PUSHBUTTON      "Set Center",IDC_BUTTON_SET_CENTER,77,302,50,14
+    GROUPBOX        "Background Color",IDC_STATIC_GROUP0,235,8,132,74
+    LTEXT           "Y",IDC_STATIC_Y0,273,25,13,10
+    LTEXT           "U",IDC_STATIC_U0,298,25,13,10
+    LTEXT           "V",IDC_STATIC_V0,325,25,13,10
+    EDITTEXT        IDC_EDIT_Y0,264,38,21,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_U0,290,38,21,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_V0,316,38,21,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Color0",IDC_BUTTON_CLR0,265,59,71,14
+    GROUPBOX        "Foreground Color1",IDC_STATIC_GROUP1,235,87,132,74
+    LTEXT           "Y",IDC_STATIC_Y1,273,102,13,10
+    LTEXT           "U",IDC_STATIC_U1,297,102,13,10
+    LTEXT           "V",IDC_STATIC_V1,325,102,13,10
+    EDITTEXT        IDC_EDIT_Y1,263,115,21,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_U1,289,115,21,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_V1,315,115,21,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Color1",IDC_BUTTON_CLR1,265,136,71,14
+    GROUPBOX        "Foreground Color2",IDC_STATIC_GROUP2,236,167,132,74
+    LTEXT           "Y",IDC_STATIC_Y2,274,180,13,10
+    LTEXT           "U",IDC_STATIC_U2,298,180,13,10
+    LTEXT           "V",IDC_STATIC_V2,326,180,13,10
+    EDITTEXT        IDC_EDIT_Y2,264,193,21,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_U2,290,193,21,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_V2,316,193,21,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Color2",IDC_BUTTON_CLR2,266,214,71,14
+    GROUPBOX        "Foreground Color3",IDC_STATIC_GROUP3,236,246,132,74
+    LTEXT           "Y",IDC_STATIC_Y3,274,258,13,10
+    LTEXT           "U",IDC_STATIC_U3,298,258,13,10
+    LTEXT           "V",IDC_STATIC_V3,326,258,13,10
+    EDITTEXT        IDC_EDIT_Y3,264,271,21,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_U3,290,271,21,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_V3,316,271,21,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Color3",IDC_BUTTON_CLR3,266,292,71,14
+    PUSHBUTTON      "Save GOSD Parameters ",IDC_BUTTON_SAVE_GOSDPARAMETERS,386,137,109,58
+END
+
+IDD_DIALOG_SHOW DIALOGEX 0, 0, 311, 250
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Image Show"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+END
+
+IDD_DIALOG_COLOR DIALOGEX 0, 0, 207, 236
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Color Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,71,212,50,14
+    PUSHBUTTON      "Palette",IDC_COLOR_PALETTE,19,9,148,143
+    PUSHBUTTON      "Lum",IDC_LUM,174,9,21,143
+    EDITTEXT        IDC_EDIT_R,43,156,29,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_G,43,173,29,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_B,43,189,29,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_Y,105,156,29,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_U,105,173,29,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_V,105,189,29,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "",IDC_BUTTON_NOWCLR,142,156,53,47
+    LTEXT           "Red",IDC_STATIC,21,159,21,8
+    LTEXT           "Green",IDC_STATIC,21,176,21,8
+    LTEXT           "Blue",IDC_STATIC,21,192,21,8
+    LTEXT           "Y",IDC_STATIC,96,158,8,8
+    LTEXT           "U",IDC_STATIC,96,176,8,8
+    LTEXT           "V",IDC_STATIC,96,192,8,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_DIALOG_CREATOR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 499
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 282
+    END
+
+    IDD_DIALOG_PARAMETER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 502
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 401
+    END
+
+    IDD_DIALOG_SHOW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 304
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 243
+    END
+
+    IDD_DIALOG_COLOR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 200
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 229
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // Chinese (P.R.C.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 170, 62
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About BurningToolGOSDCreator"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,14,14,21,20
+    LTEXT           "BurningToolGOSDCreator, Version 1.0",IDC_STATIC,42,14,114,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2019",IDC_STATIC,42,26,114,8
+    DEFPUSHBUTTON   "OK",IDOK,113,41,50,14,WS_GROUP
+END
+
+IDD_BURNINGTOOLGOSDCREATOR_DIALOG DIALOGEX 0, 0, 528, 418
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "BurningToolGOSDCreator"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,7,514,404
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 163
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
+    END
+
+    IDD_BURNINGTOOLGOSDCREATOR_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 521
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 411
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "TODO: <Company name>"
+            VALUE "FileDescription", "TODO: <File description>"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "BurningToolGOSDCreator.exe"
+            VALUE "LegalCopyright", "TODO: (c) <Company name>.  All rights reserved."
+            VALUE "OriginalFilename", "BurningToolGOSDCreator.exe"
+            VALUE "ProductName", "TODO: <Product name>"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_ABOUTBOX            "&About BurningToolGOSDCreator..."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#include "res\BurningToolGOSDCreator.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"     // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,189 @@
+//多播的服务端
+#include <winsock2.h>
+#include <WS2tcpip.h>
+#include <iostream>
+using namespace  std;
+
+//添加动态库的lib
+#pragma comment(lib, "ws2_32.lib")
+
+
+#define MCAST_PORT		(8888) 
+#define MCAST_ADDR		("224.0.0.88")					/*一个局部连接多播地址，路由器不进行转发*/ 
+#define MCAST_DATA		("BROADCAST TEST DATA")			/*多播发送的数据*/ 
+#define MCAST_INTERVAL	(1000)							/*发送间隔时间*/ 
+
+int _tmain(int argc, _TCHAR* argv[]) 
+{
+	//加载Winsock
+	WSADATA	m_wsData;
+	if (WSAStartup(MAKEWORD(2 , 2) , &m_wsData) != 0) 
+	{
+		DWORD dwErrCode = GetLastError();
+		printf("[WSAStartup] error code: %d\n", dwErrCode);
+
+		WSACleanup();//清理Winsock
+		return dwErrCode;
+	}
+
+	/*建立套接字*/ 
+	SOCKET s = socket(AF_INET, SOCK_DGRAM, 0);			
+	if (s == INVALID_SOCKET) 
+	{ 
+		DWORD dwErrCode = GetLastError();
+		printf("[socket] error code: %d\n", dwErrCode);
+
+		WSACleanup();//清理Winsock
+		return dwErrCode;
+	}
+
+	/*设定多播地址*/ 
+	struct sockaddr_in mcast_addr;						
+	memset(&mcast_addr, 0, sizeof(mcast_addr)); 
+	mcast_addr.sin_family = AF_INET;					/*设置协议族类行为AF*/ 
+	mcast_addr.sin_addr.s_addr = inet_addr(MCAST_ADDR);	/*多播IP地址*/ 
+	mcast_addr.sin_port = htons(MCAST_PORT);			/*多播端口*/ 
+
+	/*向多播地址发送数据*/ 
+	while(1) 
+	{ 
+		int n = sendto(s,								/*套接字描述符*/ 
+			MCAST_DATA,									/*数据*/ 
+			sizeof(MCAST_DATA),							/*长度*/ 
+			0, 
+			(struct sockaddr*)&mcast_addr, 
+			sizeof(mcast_addr)) ; 
+		if( n < 0) 
+		{  
+			DWORD dwErrCode = GetLastError();
+			printf("[sendto] error code: %d\n", dwErrCode);
+
+			WSACleanup();//清理Winsock
+			return dwErrCode; 
+		} 
+
+		Sleep(MCAST_INTERVAL);							/*等待一段时间*/ 
+	} 
+
+	//清理Winsock
+	WSACleanup();
+	return 0;
+}
+/***********************************************************************/
+//多播的客户端
+#include <winsock2.h>
+#include <WS2tcpip.h>
+#include <iostream>
+using namespace  std;
+
+//添加动态库的lib
+#pragma comment(lib, "ws2_32.lib")
+
+
+#define MCAST_PORT		(8888) 
+#define MCAST_ADDR		("224.0.0.88")					/*一个局部连接多播地址，路由器不进行转发*/ 
+#define MCAST_DATA		("BROADCAST TEST DATA")			/*多播发送的数据*/ 
+#define MCAST_INTERVAL	(1000)							/*发送间隔时间*/
+#define BUFF_SIZE		(256)							/*接收缓冲区大小*/
+
+int _tmain(int argc, _TCHAR* argv[]) 
+{
+	//加载Winsock
+	WSADATA	m_wsData;
+	if (WSAStartup(MAKEWORD(2 , 2) , &m_wsData) != 0) 
+	{
+		DWORD dwErrCode = GetLastError();
+		printf("[WSAStartup] error code: %d\n", dwErrCode);
+
+		WSACleanup();//清理Winsock
+		return dwErrCode;
+	}
+
+	/*建立套接字*/ 
+	SOCKET s = socket(AF_INET, SOCK_DGRAM, 0);			
+	if (s == -1) 
+	{ 
+		DWORD dwErrCode = GetLastError();
+		printf("[socket] error code: %d\n", dwErrCode);
+
+		WSACleanup();//清理Winsock
+		return dwErrCode;
+	} 
+
+	/*初始化本地地址*/ 
+	struct sockaddr_in local_addr;
+	memset(&local_addr, 0, sizeof(local_addr)); 
+	local_addr.sin_family = AF_INET; 
+	local_addr.sin_addr.s_addr = htonl(INADDR_ANY); 
+	local_addr.sin_port = htons(MCAST_PORT); 
+
+	/*绑定socket*/ 
+	int err = bind(s,(struct sockaddr*)&local_addr, sizeof(local_addr)) ; 
+	if(err < 0) 
+	{ 
+		DWORD dwErrCode = GetLastError();
+		printf("[bind] error code: %d\n", dwErrCode);
+
+		WSACleanup();//清理Winsock
+		return dwErrCode;
+	} 
+
+	/*设置回环许可*/ 
+	int loop = 1; 
+	err = setsockopt(s, IPPROTO_IP, IP_MULTICAST_LOOP, (char*)&loop, sizeof(loop)); 
+	if(err < 0) 
+	{ 
+		DWORD dwErrCode = GetLastError();
+		printf("[setsockopt] error code: %d\n", dwErrCode);
+
+		WSACleanup();//清理Winsock
+		return dwErrCode;
+	} 
+	
+	/*将本机加入广播组*/ 
+	struct ip_mreq mreq;
+	mreq.imr_multiaddr.s_addr = inet_addr(MCAST_ADDR);					/*广播地址*/ 
+	mreq.imr_interface.s_addr = htonl(INADDR_ANY);						/*网络接口为默认*/ 
+	err = setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*)&mreq, sizeof(mreq)); 
+	if (err < 0) 
+	{ 
+		DWORD dwErrCode = GetLastError();
+		printf("[setsockopt] error code: %d\n", dwErrCode);
+
+		WSACleanup();//清理Winsock
+		return dwErrCode;
+	} 
+
+	/*循环接收广播组的消息，5次后退出*/ 
+	for(int times = 0;times < 5; times++) 
+	{ 
+		int addr_len = sizeof(local_addr); 
+		
+		/*接收数据*/ 
+		char buff[BUFF_SIZE] = {0};memset(buff, 0, BUFF_SIZE);/*清空接收缓冲区*/ 
+		int n = recvfrom(s, buff, BUFF_SIZE, 0,(struct sockaddr*)&local_addr, &addr_len); 
+		if( n == -1) 
+		{ 
+			DWORD dwErrCode = GetLastError();
+			printf("[recvfrom] error code: %d\n", dwErrCode);
+
+			WSACleanup();//清理Winsock
+			return dwErrCode;
+		} 
+		
+		/*打印信息*/ 
+		printf("recv message: %s\n", buff);								
+		Sleep(MCAST_INTERVAL); 
+	} 
+
+	/*退出广播组*/ 
+	err = setsockopt(s, IPPROTO_IP, IP_DROP_MEMBERSHIP, (char*)&mreq, sizeof (mreq)); 
+	closesocket(s);
+
+	/*清理Winsock*/
+	WSACleanup();
+	return 0; 
+}
+
+
+

@@ -1,0 +1,103 @@
+#import "C:\WINDOWS\system32\mssoap30.dll" \
+	exclude("IStream", "IErrorInfo", "ISequentialStream", "_LARGE_INTEGER", \
+	"_ULARGE_INTEGER", "tagSTATSTG", "_FILETIME")
+using namespace MSSOAPLib30;
+
+#define SOAP_OK         0
+#define SOAP_FAULT		1
+#define SOAP_EXCEPTION	2
+#define SOAP_UNKNOW     3
+
+int SendSoapMessage()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	int	nRet = SOAP_UNKNOW;
+	CString strDetail = _T("");
+	try
+	{
+		CoInitialize(NULL);
+		ISoapSerializerPtr	Serializer = NULL;
+		ISoapReaderPtr		Reader	   = NULL;
+		ISoapConnectorPtr	Connector  = NULL;
+
+		Reader.CreateInstance(__uuidof(SoapReader30));
+		HRESULT hr = Connector.CreateInstance(__uuidof(HttpConnector30));
+		Serializer.CreateInstance(__uuidof(SoapSerializer30));
+
+		CString strEndPointURL = _T("http://www.webxml.com.cn/WebServices/WeatherWebService.asmx");
+		Connector->PutProperty("EndPointURL", (LPCTSTR)strEndPointURL);
+		hr = Connector->Connect();
+
+		CString strSoapAction = _T("http://WebXml.com.cn/getWeatherbyCityName");
+		Connector->PutProperty("SoapAction" , _bstr_t(strSoapAction));
+		hr = Connector->BeginMessage();
+		if(SUCCEEDED(hr))
+		{
+			//(节点名称,命名空间URL，编码类型URL,命名空间名)
+			CString strNodeName,strNameSpaceURL,strEncStyleURL,strPrefix;
+			//赋值为Name/URL0/URL1/std,对应构造出的节点为: 
+			/*
+				<std:Name xmlns:std = "URL0" std:encodingStyle="URL1">
+					...
+				</std:a>
+			*/ 
+
+			Serializer->Init(_variant_t((IUnknown*)Connector->InputStream));
+			Serializer->StartEnvelope("soap","","");
+			Serializer->StartBody("body");
+
+			strNodeName = _T("getWeatherbyCityName");
+			strNameSpaceURL = _T("http://WebXml.com.cn/");
+			strEncStyleURL = _T("");
+			strPrefix = _T("");
+			Serializer->StartElement((_bstr_t)strNodeName,(_bstr_t)strNameSpaceURL,(_bstr_t)strEncStyleURL,(_bstr_t)strPrefix);
+
+			strNodeName = _T("theCityName");
+			strNameSpaceURL=_T("http://WebXml.com.cn/");
+			strEncStyleURL = _T("");
+			strPrefix = _T("");
+			Serializer->StartElement((_bstr_t)strNodeName,(_bstr_t)strNameSpaceURL,(_bstr_t)strEncStyleURL,(_bstr_t)strPrefix);
+			Serializer->WriteString("成都");
+
+			Serializer->EndElement();
+			Serializer->EndElement();
+
+			Serializer->EndBody();
+			Serializer->EndEnvelope();
+
+			// Send the message to the web service
+			hr = Connector->EndMessage(); 
+			if(SUCCEEDED(hr))
+			{
+				hr = Reader->Load(_variant_t((IUnknown*)Connector->OutputStream), "");
+			}
+			if(NULL != Reader->Fault)
+			{
+				CComBSTR bstrReturn;
+				Reader->GetFaultString()->get_xml(&bstrReturn);
+				strDetail = bstrReturn.m_str;
+				nRet = SOAP_FAULT;
+			}
+			else
+			{
+				CComBSTR bstrReturn;
+				Reader->GetRpcResult()->get_xml(&bstrReturn);
+				CComPtr<IXMLDOMElement> pBody = Reader->GetBody();
+				BSTR bstrXml;
+				pBody->get_xml(&bstrXml);
+				strDetail = CString(LPCTSTR(bstrXml));
+				nRet = SOAP_OK;
+			}
+		}
+	}
+	catch (_com_error &e)
+	{
+		BSTR bstr = e.Description();
+		strDetail.Format(_T("%s"), e.ErrorMessage(), (LPCSTR)(bstr));
+		nRet = SOAP_EXCEPTION;
+	}
+	::CoUninitialize();
+
+	AfxMessageBox(strDetail);
+	return nRet;
+}

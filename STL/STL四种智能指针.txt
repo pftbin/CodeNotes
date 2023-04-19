@@ -1,0 +1,53 @@
+#include <memory>
+注意1：shared_ptr、weak_ptr 都声明在trl命名空间
+注意2：vs2010以后才有unique_ptr
+
+/////////////////////////////独享///////////////////////////////////////////
+1.auto_ptr
+auto_ptr<string> apt(new string("lvlv"));
+auto_ptr<string> apt1(apt);			//编译通过========此时apt和apt1都指向同一片内存，会被释放两次，错误1
+auto_ptr<string> apt2=apt;			//编译通过========此时apt和apt1都指向同一片内存，会被释放两次，错误2
+
+2.unique_ptr
+unique_ptr<string> upt1(upt);		//编译出错，已禁止拷贝========解决错误1
+unique_ptr<string> upt1=upt;		//编译出错，已禁止拷贝========解决错误2
+
+//允许使用=进行临时右值的拷贝（临时右值：函数返回的unique_ptr）
+unique_ptr<string> upt1 = fun();
+
+//控制权转移
+unique_ptr<string> u_s(new string("abc"));
+unique_ptr<string> u_s2 = std::move(u_s); 	//方法1：所有权转移(移动语义)，u_s所有权转移后，变成“空指针” 
+u_s2.reset(u_s.release());					//方法2：所有权转移
+//控制权释放
+int *p_i = u_i2.release();					//释放所有权
+//销毁  
+u_s2=nullptr;								//显式销毁所指对象，同时智能指针变为空指针。
+u_s2.reset()								//与上式等价
+
+/////////////////////////////共享///////////////////////////////////////////
+3.shared_ptr
+使用辅助类保存引用计数，当引用计数为0时才销毁对象
+shared_ptr<string> sp(new string("lvlv"));
+
+4.weak_ptr
+tr1::weak_ptr<string> pweak(new string("lvlv"));		//编译错误，weak_ptr只接受shared_ptr作为参数
+string p = new string("lvlv");
+tr1::weak_ptr<string> pweak(p);							//编译错误，weak_ptr只接受shared_ptr作为参数
+
+为了配合 shared_ptr 而引入的一种智能指针，只对 shared_ptr 进行引用，而不改变其引用计数
+weak_ptr<string> w(sp);	//与 shared_ptr 指向相同的对象，shared_ptr 引用计数不变
+//or
+weak_ptr<string> w;	 	//创建空 weak_ptr
+w=sp;				//p 可以是 shared_ptr 或 weak_ptr，赋值后 w 与 p 共享对象
+
+w.reset();			//将 w 置空
+w.use_count();		//返回与 w 共享对象的 shared_ptr 的数量
+w.expired();		//若 w.use_count()==0，返回 true，否则返回 false
+w.lock();			//如果 expired()==true，返回一个空 shared_ptr，否则返回非空 shared_ptr
+
+
+
+
+
+

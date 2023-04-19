@@ -1,0 +1,67 @@
+1.下拉框选择颜色按钮
+
+CMFCColorButton m_BtncolorSel;
+DDX_Control(pDX, IDC_BUTTON_COLORSEL, m_BtncolorSel);
+
+m_BtncolorSel.EnableAutomaticButton (_T("Default"), (COLORREF)-1);
+m_BtncolorSel.EnableOtherButton (_T("Other"),TRUE,TRUE);//第2个参数是指定选择颜色窗口的类型，TRUE/FALSE是两种不同的窗口
+m_BtncolorSel.SetColor ((COLORREF)-1);
+m_BtncolorSel.SetColumnsNumber(10);
+
+注意：需要加上下面的语句，避免控件显示不正常
+SetRegistryKey(_T("应用程序向导生成的本地应用程序")); 后加上
+CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerWindows)); 这一句 
+
+注意：CMFCColorButton控件的“其他”按钮点击之后没有反应
+RC文件的最后，找到#include "afxres.rc"，在后面加入一条语句 #include "afxribbon.rc"
+
+2.Ribbon状态栏（添加滑动条）
+//声明
+CMFCRibbonStatusBar m_wndStatusBar;//要求父类是CFrameWnd，只能在文档程序使用
+//创建
+m_wndStatusBar.Create(this);
+//添加子项
+#define SLIDER_MIN_VALUE  10
+#define SLIDER_MAX_VALUE  100
+#define ID_STATUSBAR_ZOOM_TEXT		10001
+#define ID_STATUSBAR_ZOOM_SLIDER	10002
+m_wndStatusBar.AddExtendedElement(new CMFCRibbonStatusBarPane(ID_STATUSBAR_ZOOM, _T("100%"), FALSE, NULL, _T("1000%")), _T("Zoom"));//文字显示
+m_wndStatusBar.AddSeparator();//分割符
+CMFCRibbonSlider* pSlider = new CMFCRibbonSlider(ID_STATUSBAR_ZOOM_SLIDER);//滚动条
+pSlider->SetZoomButtons();
+pSlider->SetRange(SLIDER_MIN_VALUE, SLIDER_MAX_VALUE);
+pSlider->SetPos(100);
+pSlider->SetZoomIncrement(10);
+m_wndStatusBar.AddExtendedElement(pSlider, _T("Zoom Slider"));
+
+Ex:获取子项,根据子项的接口获取数值做对应处理，如画面缩放
+CMFCRibbonSlider* pSlider = DYNAMIC_DOWNCAST(CMFCRibbonSlider, m_wndStatusBar.FindElement(ID_STATUSBAR_ZOOM_SLIDER));
+ASSERT_VALID(pSlider);
+CMFCRibbonStatusBarPane* pZoom = DYNAMIC_DOWNCAST(CMFCRibbonStatusBarPane, m_wndStatusBar.FindElement(ID_STATUSBAR_ZOOM));
+ASSERT_VALID(pZoom);
+
+另：在窗口程序使用状态栏
+//声明
+CStatusBar m_statusBar;
+
+//定义状态栏面板的ID
+UINT nID[] = {1001,1002,1003};
+//创建状态栏
+m_statusBar.Create(this);
+//添加状态栏面板，参数为ID数组和面板数量
+m_statusBar.SetIndicators(nID,sizeof(nID)/sizeof(UINT));
+//设置面板序号，ID，样式和宽度
+m_statusBar.SetPaneInfo(0,1001,SBPS_NORMAL,80);//SBPS_NORMAL为普通样式，固定宽度
+m_statusBar.SetPaneInfo(1,1002,SBPS_STRETCH,0);//SBPS_STRETCH为弹簧样式，会自动扩展它的空间
+m_statusBar.SetPaneInfo(2,1003,SBPS_NORMAL,80);
+//设置状态栏位置
+RepositionBars(AFX_IDW_CONTROLBAR_FIRST,AFX_IDW_CONTROLBAR_LAST,0);
+//设置状态栏面板文本，参数为面板序号和对应文本
+m_statusBar.SetPaneText(0,_T("aaa"));
+m_statusBar.SetPaneText(1,_T("bbb"));
+m_statusBar.SetPaneText(2,_T("ccc"));
+
+
+3.窗口程序需要增加菜单，可先新增ID_XXX的菜单资源，再在rc文件中加入 MENU ID_XXX 即可
+
+

@@ -1,0 +1,66 @@
+// StdioDBManage.idl : IDL source for StdioDBManage.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (StdioDBManage.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+typedef
+[
+	uuid(3E7F6883-A445-4f2d-AACA-92A68A416A83),
+	v1_enum,
+]
+enum STD_DATABASE_TYPE
+{
+	DB_SQLSERVER		=	1,			//SQLServer数据库
+	DB_ORACLE			=	2,			//Oracle数据库
+	DB_SYBASE			=	3,			//SYBASE数据库
+	DB_DB2				=	4,			//DB2数据库
+	DB_ACCESS			=	5,			//Access数据库
+	DB_MYSQL			=	6,			//MySql数据库
+} STD_DATABASE_TYPE;
+
+[
+	uuid(1426CCA0-CD45-4BFF-928E-BD1709783892),
+	version(1.0),
+	helpstring("StdioDBManage 1.0 Type Library")
+]
+library STDIODBMANAGELib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+	importlib("C:\Program Files\Common Files\System\ADO\msado15.dll");
+
+	[
+		object,
+		uuid(F09B6EFC-F0BA-4A9A-920F-E2C4CD9FA30F),
+		dual,
+		helpstring("IStdioDB Interface"),
+		pointer_default(unique)
+	]
+	interface IStdioDB : IDispatch
+	{
+		[id(1), helpstring("method GetRecordset")] HRESULT GetRecordset([in]BSTR bstrSQL, [out, retval]_Recordset **ppRs);
+		[id(2), helpstring("method ExecuteCommand")] HRESULT ExecuteCommand([in]BSTR bstrCmd, [out, retval]unsigned long *pulAffectCount);
+		[id(3), helpstring("method UpdateRecordset")] HRESULT UpdateRecordset([in]_Recordset *pRs);
+		[id(4), helpstring("method DeviateTransaction")] HRESULT DeviateTransaction();
+		[id(5), helpstring("method ManualCommit")] HRESULT ManualCommit();
+		[id(6), helpstring("method GetDatabaseType")] HRESULT GetDatabaseType([out,retval]long *plDatabaseType);
+		[id(7), helpstring("method GetNextID")] HRESULT GetNextID([in]BSTR bstrTableName,[out,retval]long* plNextID);
+		[id(8), helpstring("method GetRecordsetWithLOB")] HRESULT GetRecordsetWithLOB([in]BSTR bstrSql, [out,retval]_Recordset **ppRs);
+		[id(9), helpstring("method UpdateRecordsetWithLOB")] HRESULT UpdateRecordsetWithLOB([in]_Recordset *pRs);
+		[id(12), helpstring("method LockItemData")] HRESULT LockItemData([in]BSTR bstrDataID,[in]long lLockType,[in]long lLoginInfoID,[in]long lUserID,[out,retval]long  *plLockFlag);
+		[id(13), helpstring("method CheckDBStatus")] HRESULT CheckDBStatus([out,retval]long *plDBStatus);
+	};
+
+	[
+		uuid(DD4349CC-788B-4aed-B3A3-4F3F278EECEC),
+		helpstring("StdioDB Class")
+	]
+	coclass StdioDB
+	{
+		[default] interface IStdioDB;
+	};
+};

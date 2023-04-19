@@ -1,0 +1,55 @@
+1.自动释放堆内存(局部类对象，函数退出时自动析构特性)
+class _autoRelease
+{
+public:
+	_autoRelease(char *pdel):pbuffer(pdel)
+	{
+		pwbuffer = NULL;
+	}
+	_autoRelease(WCHAR *pdel):pwbuffer(pdel)
+	{
+		pbuffer = NULL;
+	}
+	~_autoRelease()
+	{
+		if(pbuffer)
+		{
+			delete []pbuffer;
+			pbuffer = NULL;
+		}
+		if(pwbuffer)
+		{
+			delete []pwbuffer;
+			pwbuffer = NULL;
+		}
+	}
+protected:
+	char *pbuffer;
+	WCHAR *pwbuffer;
+};
+#define  AUTODEL(pbuff,name)  _autoRelease (name)(pbuff)
+
+例：
+main()
+{
+	char* pTestBuf = new char[256];
+	AUTODEL(pTestBuf,testname);
+	
+	
+	...
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

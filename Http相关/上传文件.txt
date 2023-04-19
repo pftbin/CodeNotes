@@ -1,0 +1,258 @@
+1.WinInet版本
+#include "stdafx.h"
+#include <stdio.h>
+#include <windows.h>
+#include <winsock2.h>
+#include <wininet.h>
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "wininet.lib")
+namespace
+{
+    LPCTSTR boundary = TEXT("-----------------------------1234567890123"); //随机字符串
+    LPCSTR aboundary = "-----------------------------1234567890123";
+}
+//
+BOOL DoUploadFile(char *pszFilePath, char *pszFileName)
+{
+    HINTERNET hSession = InternetOpen("HttpSendRequest",
+        INTERNET_OPEN_TYPE_PRECONFIG,
+        NULL,
+        NULL,
+        0); //同步方式
+    if(!hSession)
+    {
+        printf("Failed to open InternetOpen\n");
+        return -1;
+    }
+    //连接到一个http服务:
+    HINTERNET hConnect = InternetConnect(hSession,
+        "127.0.0.1",
+        8899/*INTERNET_DEFAULT_HTTP_PORT*/, //连接到80端口
+        NULL,
+        NULL,
+        INTERNET_SERVICE_HTTP, //服务类型HTTP，FTP或Gopher
+        0,
+        1);
+    if(!hConnect)
+    {
+        printf("error InternetConnect\n");
+        return -1;
+    }
+    //上传文件
+    HINTERNET hRequest = HttpOpenRequest(hConnect, 
+        "POST",
+        "/CRMFiles/"/*远程文件夹名字*/, 
+        HTTP_VERSION/*NULL*/, 
+        NULL, 
+        NULL, 
+        INTERNET_FLAG_KEEP_CONNECTION/*INTERNET_FLAG_NO_CACHE_WRITE*/, 
+        0);
+    if (!hRequest)
+    {
+        printf("Failed to open request handle: %lu\n", GetLastError ());
+        return FALSE;
+    }
+    //打开指定的文件:
+    HANDLE hFile = CreateFile(pszFilePath, 
+        GENERIC_READ, 
+        FILE_SHARE_READ|FILE_SHARE_WRITE,
+        NULL, 
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        printf("\nFailed to open local file %s.", pszFilePath);
+        return FALSE;
+    }
+    DWORD dwFileSize = GetFileSize(hFile, 0);
+    printf ("File size is %d\n", dwFileSize );
+    TCHAR content_type[128] = {0};
+    _stprintf_s(content_type, TEXT("Content-Type: multipart/form-data; boundary=%s"), boundary);
+    LPTSTR referer = TEXT("Referer: http://127.0.0.1/CRMFiles");
+    LPTSTR accept = TEXT("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+    LPTSTR accept_lan = TEXT("Accept-Language: zh-cn,zh;q=0.8,en-us;q=0.5,en;q=0.3");
+    LPTSTR accept_encoding = TEXT("Accept-Encoding: gzip, deflate");
+    LPTSTR user_agent = TEXT("User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:22.0) Gecko/20100101 Firefox/22.0");
+    HttpAddRequestHeaders(hRequest, content_type, -1, HTTP_ADDREQ_FLAG_ADD|HTTP_ADDREQ_FLAG_REPLACE);
+    HttpAddRequestHeaders(hRequest, referer, -1, HTTP_ADDREQ_FLAG_ADD|HTTP_ADDREQ_FLAG_REPLACE);
+    HttpAddRequestHeaders(hRequest, accept, -1, HTTP_ADDREQ_FLAG_ADD|HTTP_ADDREQ_FLAG_REPLACE);
+    HttpAddRequestHeaders(hRequest, accept_lan, -1, HTTP_ADDREQ_FLAG_ADD|HTTP_ADDREQ_FLAG_REPLACE);
+    HttpAddRequestHeaders(hRequest, accept_encoding, -1, HTTP_ADDREQ_FLAG_ADD|HTTP_ADDREQ_FLAG_REPLACE);
+    char first_boundary[128] = {0};
+    char delimiter[128] = {0};
+    char end_boundary[128] = {0};
+    sprintf_s(first_boundary, "--%s\r\n", aboundary);
+    sprintf_s(delimiter, "\r\n--%s\r\n", aboundary);
+    sprintf_s(end_boundary, "\r\n--%s--\r\n", aboundary);
+    char content_dispos[128] = {0};
+    if (strlen(pszFileName) > 0){
+        _stprintf_s(content_dispos, "Content-Disposition: form-data; name=\"fileupload\"; filename=\"%s\"\r\n", pszFileName);
+    } 
+    //LPSTR content_dispos = "Content-Disposition: form-data; name=\"fileupload\"; filename=\"123.jpg\"\r\n";    
+    LPSTR content_type2 = "Content-Type: application/octet-stream\r\n\r\n";
+    LPSTR rn = "\r\n";
+    //
+    INTERNET_BUFFERS BufferIn = {0};
+    BufferIn.dwStructSize = sizeof( INTERNET_BUFFERS );
+    BufferIn.Next = NULL; 
+    BufferIn.lpcszHeader = NULL;
+    BufferIn.dwHeadersLength = 0;
+    BufferIn.dwHeadersTotal = 0;
+    BufferIn.lpvBuffer = NULL;                
+    BufferIn.dwBufferLength = 0;
+    BufferIn.dwBufferTotal = dwFileSize
+        +strlen(first_boundary)
+        +strlen(content_dispos)
+        +strlen(content_type2)
+        +strlen(end_boundary); //Content-Length:
+    BufferIn.dwOffsetLow = 0;
+    BufferIn.dwOffsetHigh = 0;
+    if(!HttpSendRequestEx( hRequest, &BufferIn, NULL, 0/*HSR_INITIATE*/, 0))
+    {
+        InternetCloseHandle(hRequest);
+        InternetCloseHandle(hConnect);
+        InternetCloseHandle(hSession);
+        printf( "Error on HttpSendRequestEx %lu\n", GetLastError() );
+        return FALSE;
+    }
+    DWORD dwWrittenBytes = 0;
+    InternetWriteFile(hRequest, (byte*)first_boundary, strlen(first_boundary), &dwWrittenBytes); //first boundary
+    InternetWriteFile(hRequest, (byte*)content_dispos, strlen(content_dispos), &dwWrittenBytes);
+    InternetWriteFile(hRequest, (byte*)content_type2, strlen(content_type2), &dwWrittenBytes);
+    //BYTE *lpBuffer = (BYTE*)VirtualAlloc(0, dwFileSize, MEM_COMMIT, PAGE_READWRITE);
+    DWORD sum = 0;
+    DWORD dwBytesRead = 0;
+    DWORD dwBytesWritten = 0;
+    BYTE pBuffer[5120] = {0}; // 按照5kb读取文件(栈的大小为1M,超过1M将提示溢出)
+    BOOL bRead, bRet;
+    do
+    {
+        if (!(bRead = ReadFile (hFile, pBuffer, sizeof(pBuffer), &dwBytesRead, NULL)))
+        {
+            printf ("\nReadFile failed on buffer %lu.",GetLastError());
+            break;
+        }
+        if (!(bRet=InternetWriteFile( hRequest, pBuffer, dwBytesRead, &dwBytesWritten)))
+        {
+            printf ("\nInternetWriteFile failed %lu", GetLastError()); 
+            break;
+        }
+        sum += dwBytesWritten;
+    }while (dwBytesRead == sizeof(pBuffer));
+    //
+    CloseHandle(hFile);
+    //last boundary
+    InternetWriteFile(hRequest, (byte*)end_boundary, strlen(end_boundary), &dwWrittenBytes);
+    printf ("Actual written bytes: %d\nupload %s successed!\n", sum, pszFileName);
+    //结束一个HTTP请求:
+    if(!HttpEndRequest(hRequest, NULL, 0, 0))
+    {
+        printf( "Error on HttpEndRequest %lu \n", GetLastError());
+        return FALSE;
+    }
+    InternetCloseHandle(hRequest);
+    InternetCloseHandle(hConnect);
+    InternetCloseHandle(hSession);
+    //VirtualFree(lpBuffer, 0, MEM_RELEASE);
+    return TRUE;
+}
+//
+int main(int argc, char **argv)
+{
+    BOOL bOkey = DoUploadFile("d:\\test.jpg", "test123.jpg");
+    if(!bOkey)
+    {
+        printf("error DoUploadFile\n");
+    }
+    system("pause");
+    return 0;
+}
+
+
+2.libcurl版本
+#include "stdafx.h"
+#include <iostream>
+#include <string.h>
+#include <assert.h>
+#include "curl.h"
+using namespace std;
+/**
+ * @brief 回调函数,得到响应内容
+ */
+int write_data(void* buffer, int size, int nmemb, void* userp)
+{
+    std::string * str = dynamic_cast<std::string *>((std::string *)userp);
+    str->append((char *)buffer, size * nmemb);
+    return nmemb;
+}
+/**
+ * @brief upload
+ */
+bool upload(string url, string filePath, string fileName, string &response, long &statusCode)
+{
+    CURL *curl = curl_easy_init();
+    struct curl_httppost* post = NULL;
+    struct curl_httppost* last = NULL;
+    if (curl)
+    {
+        //指定url
+        curl_easy_setopt(curl, CURLOPT_URL, (char *)url.c_str());
+        /* Fill in the file upload field */
+        /*curl_formadd(&post,
+            &last,
+            CURLFORM_COPYNAME, "file",
+            CURLFORM_FILE, "d:\\beyond.mp3",
+            CURLFORM_END);*/
+        CURLFORMcode formCode = CURL_FORMADD_OK;
+        formCode = curl_formadd(&post,
+            &last,
+            CURLFORM_PTRNAME, "file",
+            CURLFORM_FILE, (char*)filePath.c_str(),
+            CURLFORM_FILENAME, (char*)fileName.c_str(),
+            CURLFORM_END);// form-data key(file) "filePath"为文件路径,"fileName"为文件上传时文件名
+        /* Fill in the filename field */
+        /*curl_formadd(&post,
+            &last,
+            CURLFORM_COPYNAME, "name",
+            CURLFORM_COPYCONTENTS, "EasyCurl.h",
+            CURLFORM_END);*/
+        /* Fill in the submit field too, even if this is rarely needed */
+        curl_formadd(&post,
+            &last,
+            CURLFORM_COPYNAME, "submit",
+            CURLFORM_COPYCONTENTS, "submit",
+            CURLFORM_END);
+        //构造post参数
+        curl_easy_setopt(curl, CURLOPT_HTTPPOST, post);
+        //绑定相应
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+        //绑定响应内容的地址
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)(&response));
+        //支持重定向(HFS作为文件服务端,不加这句代码,状态码返回的是301)
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+        //执行请求
+        CURLcode ret = curl_easy_perform(curl);
+        //获取返回信息
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &statusCode);
+        //
+        curl_easy_cleanup(curl);
+        return (ret == CURLE_OK);
+    } 
+    else
+    { 
+        return false;
+    }
+}
+//
+int _tmain(int argc, _TCHAR* argv[])
+{
+    std::string response;
+    long statuscode = 0;
+    int code = upload("http://127.0.0.1:7879/CRMFiles", "d:\\error.wav", "_123.mp3", response, statuscode);
+    cout << "code : "<< code << endl;
+    cout << "status_code : "<< statuscode << endl;
+    cout << "response : "<< response.c_str() << endl;
+    getchar();
+    return 0;
+}

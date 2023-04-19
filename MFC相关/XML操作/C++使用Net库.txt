@@ -1,0 +1,53 @@
+#using <System.Xml.dll>
+using namespace System;
+using namespace System::IO;
+using namespace System::Xml;
+
+
+void createnode(XmlDocument^ doc,XmlElement^ parent,System::String^ nodename,System::String^ nodevalue)
+{
+	XmlElement^ elem = doc->CreateElement(nodename);
+	XmlText^ text = doc->CreateTextNode(nodevalue);
+	parent->AppendChild( elem );
+	parent->LastChild->AppendChild(text);
+}
+
+BOOL C_XMLServer::XML_SaveDeviceConfigInfoEx(DEVCONFIGITEM_VEC& inDeviceConfigVec,CString strXMLPath)
+{
+
+	//Create the XmlDocument.
+	XmlDocument^ doc = gcnew XmlDocument;
+
+	//格式定义
+	//	XmlDeclaration^ dec = doc->CreateXmlDeclaration("1.0", "utf-8","");//注：第三个字段是standalone，设为空
+	//	doc->AppendChild(dec); 
+
+	//Config
+	XmlElement^ Config = doc->CreateElement("Config");
+	doc->AppendChild(Config);
+
+	//Channels
+	XmlElement^ Channels = doc->CreateElement("Channels");
+	Config->AppendChild(Channels);
+
+	for (int i = 0; i < inDeviceConfigVec.size(); i++)
+	{
+		//Channel
+		XmlElement^ Channel = doc->CreateElement("Channel");
+		Channels->AppendChild(Channel);
+
+		createnode(doc,Channel,"ID",gcnew String(inDeviceConfigVec[i].strDeviceID));
+		createnode(doc,Channel,"ID",gcnew String(inDeviceConfigVec[i].strGUID));
+		createnode(doc,Channel,"ID",gcnew String(inDeviceConfigVec[i].strName));
+		createnode(doc,Channel,"ID",gcnew String(inDeviceConfigVec[i].strType));
+		createnode(doc,Channel,"ID",gcnew String(inDeviceConfigVec[i].strComPort));
+		createnode(doc,Channel,"ID",gcnew String(inDeviceConfigVec[i].strIP));
+		createnode(doc,Channel,"ID",gcnew String(inDeviceConfigVec[i].strPort));
+		createnode(doc,Channel,"ID",gcnew String(inDeviceConfigVec[i].strURL));
+	}
+
+	//输出到文件
+	doc->Save(gcnew String(strXMLPath));
+
+	return TRUE;
+}

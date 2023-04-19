@@ -1,0 +1,28 @@
+	//主要函数：SetDoc、ResetPos、AddElem、IntoElem、AddAttrib、OutOfElem、Save
+	C_BurXMLFile XMLDoc;
+	XMLDoc.SetDoc(_T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"));
+	XMLDoc.ResetPos();
+	if(XMLDoc.AddElem(_T("File")))
+	{
+		XMLDoc.AddAttrib(_T("Version"), _T("1.0"));
+		if(XMLDoc.IntoElem())
+		{
+			//chip
+			XMLDoc.AddElem(_T("Chip"));
+			XMLDoc.AddAttrib(_T("InitFile"), _T("..."));
+
+			//sensor
+			XMLDoc.AddElem(_T("Sensor"));
+			XMLDoc.AddAttrib(_T("ItemCount"), _T("..."));
+			if(XMLDoc.IntoElem())
+			{
+				XMLDoc.AddElem(_T("SensorItem"));
+				XMLDoc.AddAttrib(_T("Sensor0"), _T("..."));
+				XMLDoc.AddAttrib(_T("InitFile"), _T("..."));
+				
+				XMLDoc.OutOfElem();
+			}
+			XMLDoc.OutOfElem();
+		}
+	}
+	XMLDoc.Save(_T("C:\\Users\\yin_bai\\Desktop\\TestSetting.xml"));

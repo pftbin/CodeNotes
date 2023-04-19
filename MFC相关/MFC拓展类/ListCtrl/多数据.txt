@@ -1,0 +1,43 @@
+class CVirtaulListCtrl : public CListCtrl
+{
+DECLARE_DYNAMIC(CVirtaulListCtrl)
+public:
+    CVirtaulListCtrl();
+    virtual ~CVirtaulListCtrl();
+public:
+//导入数据
+    void ImportData(CStringArray *pDataArray)
+    {
+        m_pDataArray = pDataArray;
+        SetItemCount(m_pDataArray->GetSize());
+    }
+protected:
+    CStringArray *m_pDataArray;
+protected:
+DECLARE_MESSAGE_MAP()
+public:
+    afx_msg void OnLvnGetdispinfo(NMHDR *pNMHDR, LRESULT *pResult)
+    {
+        LV_DISPINFO* pDispInfo = (LV_DISPINFO*)pNMHDR;
+        LV_ITEM* pItem= &(pDispInfo)->item;
+        int  iItemIndex= pItem->iItem;  //行号
+        int col = pItem->iSubItem;  //列号
+        if(pItem->mask & LVIF_TEXT)
+        {
+            if(col == 0)
+            {
+                //序号
+                char numberStr[10];
+                itoa(iItemIndex+1, numberStr, 10);
+                lstrcpyn(pItem->pszText, numberStr, pItem->cchTextMax);
+            }
+            else if(col == 1)
+            {
+                lstrcpyn(pItem->pszText, m_pDataArray->GetAt(iItemIndex), pItem->cchTextMax);
+            }
+        }
+    }
+};
+
+注意：
+需要将列表控件的“所有者数据”属性设为“true”

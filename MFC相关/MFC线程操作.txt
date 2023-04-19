@@ -1,0 +1,173 @@
+//////////////////////////////////////////////////////////////////////////////////////////
+1.创建子线程
+struct TheaadInfo
+{
+	xxx;
+};
+HANDLE g_hEventExit = NULL;
+
+ThreadInfo 	m_ThreadInfo;
+CWinThread*	m_pThread;
+
+if (g_hEventExit == NULL)
+{
+	g_hEventExit = ::CreateEvent(NULL,TRUE,FALSE,NULL);
+	m_ThreadInfo = XXX;
+	
+	m_pThread = NULL;
+	m_pThread = AfxBeginThread(MySubThread,(LPVOID)&m_ThreadInfo);
+}
+
+2.子线程死循环操作
+UINT  MySubThread(LPVOID lpParam)
+{
+	ThreadInfo* pMutiInfo = (ThreadInfo)lpParam;
+	ThreadInfo  TempInfo;
+	memset(&TempInfo,0,sizeof(ThreadInfo));
+	memcpy(&TempInfo,pMutiInfo,sizeof(ThreadInfo));
+	
+	while(g_hEventExit != NULL)
+	{
+		DWORD dwRet = WaitForSingleObject(g_hEventExit,0);
+		if (dwRet == WAIT_TIMEOUT)
+		{
+			if (!g_hEventExit)
+				return 0;
+			//do something
+		}
+		else if (dwRet == WAIT_OBJECT_0)
+		{
+			TRACE0("Thread Exit...\n ");
+			g_hEventExit = NULL;
+			break;
+		}
+		else if (dwRet == WAIT_ABANDONED)
+		{
+			TRACE0("Thread Error...\n ");
+			break;
+		}
+	}
+
+	return 0;
+}
+
+3.主线程等待子线程结束，传入子线程句柄即可
+SetEvent(g_hEventExit);
+Sleep(200);
+WaitForSubThread(m_pThread); 
+
+void ClassName::WaitForSubThread(HANDLE handle) 
+{
+	MSG msg;
+	while(TRUE) {
+		DWORD dwRet = MsgWaitForMultipleObjects(1, &handle, FALSE, INFINITE, QS_ALLINPUT);
+		switch(dwRet) {
+		case WAIT_OBJECT_0:
+			ATLTRACE(_T("Wait Success..."));
+			break;
+		case WAIT_OBJECT_0 + 1:
+			PeekMessage(&msg, NULL, 0, 0, PM_REMOVE);
+			DispatchMessage(&msg);
+			continue;
+		default:
+			break;      
+		}
+		break;
+	}  
+}
+
+
+4.挂起、恢复线程
+
+挂起：SuspendThread 返回值大于0时为挂起状态
+
+	if(m_pThread)
+	{
+		DWORD dwRet = m_pThread->SuspendThread();
+		while (dwRet == 0)
+		{
+			dwRet = m_pThread->SuspendThread();
+		}
+	}
+
+恢复：ResumeThread 返回值等于0为运行状态
+	if(m_pThread)
+	{
+		DWORD dwRet = m_pThread->ResumeThread();
+		while (dwRet)
+		{
+			dwRet = m_pThread->ResumeThread();
+		}
+	}
+
+//////////////////////////////////////////////////////////////////////////////////////////	
+1.创建子线程
+struct TheaadInfo
+{
+	xxx;
+};
+DWORD dwTaskThreadID = 0;
+HANDLE hTaskHandle = ::CreateThread(NULL,0,TaskThread,(LPVOID)&TheaadInfo,0,&dwTaskThreadID);
+
+2.子线程循环，收到退出消息停止运行
+
+//共享资源锁
+CRITICAL_SECTION	m_LockThreadInfo;			//声明
+InitializeCriticalSection(&m_LockThreadInfo);	//初始化
+EnterCriticalSection(&m_LockThreadInfo);		//进入
+//.........................
+LeaveCriticalSection(&m_LockThreadInfo);		//退出
+
+//
+#define THREADMSG_EXIT 30001
+static DWORD WINAPI TaskThread(LPVOID lpParam);
+CXXX::TaskThread()
+{
+	CXXX* pThis = (CXXX*)(lpParam);
+	pThis->DoTaskThread();
+}
+
+CXXX::DoTaskThread()
+{
+::CoInitialize(NULL);
+	while(TRUE)
+	{
+		MSG msg;
+		if(PeekMessage(&msg,NULL,0,0,PM_REMOVE))
+		{
+			if(msg.message == THREADMSG_EXIT)
+				break;
+		}
+		
+		EnterCriticalSection(&m_LockThreadInfo);
+		//do something
+		LeaveCriticalSection(&m_LockThreadInfo);
+	}
+::CoUninitialize();
+}
+
+3.主线程退出子线程：
+#define	THREADMSG_EXIT			30001
+void CloseThread(HANDLE hThreadHandle,DWORD& dwThreadID)
+{
+	if(dwThreadID)
+	{
+		PostThreadMessage(dwThreadID,THREADMSG_EXIT,0,0);
+		CloseHandle(hThreadHandle);
+
+		if(hThreadHandle != INVALID_HANDLE_VALUE)
+		{
+			if(WaitForSingleObject(hThreadHandle,100) != WAIT_OBJECT_0)
+			{
+				TerminateThread(hThreadHandle, -1);
+			}
+		}
+	}
+	dwThreadID = 0;
+	hThreadHandle = INVALID_HANDLE_VALUE;
+}
+
+
+
+
+

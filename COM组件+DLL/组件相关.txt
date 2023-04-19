@@ -1,0 +1,53 @@
+1.运行时获取组件所在文件夹路径
+a）从内存地址获取组件Handle
+	MEMORY_BASIC_INFORMATION   mbi;
+	HMODULE hModule = ((VirtualQuery(&_AtlModule, &mbi, sizeof(mbi)) != 0) ? (HMODULE)mbi.AllocationBase : NULL); 
+	//_AtlModule 为组件的 Model 对象
+	
+b）获取Handle的所在路径
+	TCHAR exeFullName[MAX_PATH];
+	memset(exeFullName, 0, MAX_PATH * sizeof(TCHAR));
+	::GetModuleFileName(hModule,exeFullName,MAX_PATH);
+	
+c）转换为组件内的字符串数据类型
+	BSTR bstr;
+	bstr = ::SysAllocString(exeFullName);
+	int iLen = ::SysStringLen(bstr);
+
+d）从完整路径截断获取文件夹路径
+	bstr = ::SysAllocStringLen(exeFullName, iLen - 20);
+	//20为当前Dll完整名称的长度+1,1为路径符号</>  C:/XXX/MyCOM.dll,长度即为 /MyCOM.dll 的长度为 10
+
+///////////////////////////////////////////////////////////////////////////////////////
+2.使用智能指针
+a）释放一个智能指针，直接给它赋NULL值即可
+
+b）使用&运算符（取指针地址）的时候，要确保CComPtr为NULL
+因为通过CComPtr的地址对CComPtr赋值时，返回的是内部的COM接口指针
+如果不为NULL则旧的COM接口指针,将没有执行Release，原本指针不能被释放。（尽量不使用&）
+
+c）对于函数返回的COM指针，为了使用智能指针管理，需使用Attah（）函数
+因为函数返回的COM指针，一般在内部已进行了AddRef操作，Attach不会进行AddRef，避免智能指针析构错误
+
+d）Deatch（）函数则是COM指针脱离智能指针管理需调用的函数，调用后需对COM指针进行AddRef和Release的管理
+	
+///////////////////////////////////////////////////////////////////////////////////////
+3.MSXML 组件的使用
+读取/保存
+//put_async				设定阻塞模式，默认VARIANT_TRUE(非阻塞)
+//put_validateOnParse	设定格式出错是否继续解析
+//createNode			创建第一个新节点
+//appendChild			父节点添加一个新的子节点
+//selectSingleNode		定位指定名称节点
+//selectNodes			父节点查询子节点集合(同名、同级的子节点)；使用get_length获取集合节点个数；使用get_item依次获取节点
+//insertBefore			指定节点前插入新节点
+
+
+
+
+
+
+
+
+
+

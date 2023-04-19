@@ -1,0 +1,265 @@
+1.改变（控件/窗口）的大小、位置
+CRect rect;
+pWnd->GetWindowRect(&rect);	//must1
+ScreenToClient(&rect);   	//must2,得到相对坐标，直接GetClientRect，nx/ny会为0
+int nx = rect.left + nXOffset;
+int ny = rect.top + nYOffset;
+int cx = rect.right - rect.left;
+int cy = rect.bottom - rect.top;
+pWnd->SetWindowPos(NULL,nx,ny,cx,cy,SWP_NOZORDER);//通过改变 nx/ny移动控件，cx/cy 缩放控件
+
+2.
+GetSystemMetrics(SM_CXFRAME); 
+GetSystemMetrics(SM_CYFRAME); //获取标题栏的左上角点位置；
+GetSystemMetrics(SM_CYSIZE); //获取标题栏的高度。
+GetSystemMetrics(SM_CXVSCROLL);
+GetSystemMetrics(SM_CYHSCROLL);//获取滚动条宽度/高度
+
+
+3.弹出右键菜单（Menu）
+1）先在资源中添加Menu，添加Item ID及点击响应。
+2）需要显示的地方添加如下代码
+	CPoint point; 
+	GetCursorPos(&point);
+	
+	CMenu menu;
+	VERIFY(menu.LoadMenu(IDR_MENU_XXX));
+
+	CMenu* pPopup = menu.GetSubMenu(0);
+	ASSERT(pPopup != NULL);
+	CWnd* pWndPopupOwner = this;
+
+	pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, pWndPopupOwner);
+	menu.DestroyMenu();
+
+4.按钮添加图片
+1）属性ICON项改为True
+2）添加代码
+	CRect rect;
+	CButton* pButton = NULL;
+	long width = 0,height = 0;
+	HBITMAP hBitmap = NULL;
+	HICON hIcon = NULL;
+
+	pButton = (CButton*)GetDlgItem(IDC_BUTTON_GEN_GOSD);
+	if (pButton)
+	{
+		pButton->GetWindowRect(rect);
+		width = rect.Width();
+		height = rect.Height();
+		
+		//加载BMP资源ID
+		hBitmap = (HBITMAP)LoadImage(AfxGetInstanceHandle(),MAKEINTRESOURCE(IDB_BITMAP1),IMAGE_BITMAP, width-5, height-5, LR_LOADMAP3DCOLORS);
+		pButton->SetBitmap(hBitmap);
+		
+		//加载ICON资源ID
+		hIcon = (HICON)LoadImageW(AfxGetInstanceHandle(),MAKEINTRESOURCE(IDI_ICON1),IMAGE_ICON,width-5,height-5,LR_DEFAULTCOLOR|LR_CREATEDIBSECTION);
+		pButton->SetIcon(hIcon);
+	}
+	
+//or
+HBITMAP hBmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_BITMAP_D4_NEW));
+((CButton*)GetDlgItem(IDC_BUTTON_NEW))->SetBitmap(hBmp);
+
+Ex：Bitmap资源当Icon资源
+
+	CBitmap bitmap;
+	bitmap.LoadBitmap(IDB_BITMAP_XXX);
+	
+	HICON HICONFromCBitmap(CBitmap& bitmap)
+	{
+		BITMAP bmp;
+		bitmap.GetBitmap(&bmp);
+
+		HBITMAP hbmMask = ::CreateCompatibleBitmap(::GetDC(NULL), 
+		bmp.bmWidth, bmp.bmHeight);
+
+		ICONINFO ii = {0};
+		ii.fIcon = TRUE;
+		ii.hbmColor = bitmap;
+		ii.hbmMask = hbmMask;
+
+		HICON hIcon = ::CreateIconIndirect(&ii);
+		::DeleteObject(hbmMask);
+
+		return hIcon;
+	}
+
+
+
+
+5.按钮(控件)添加Tooltip
+1）对话框类添加成员: 
+	CToolTipCtrl m_ToolTips; 
+2）在对话框 OnInitDialog 中添加 
+	m_ToolTips.Create(this); 
+	m_ToolTips.AddTool(GetDlgItem(IDC_BUTTON_XXX),TEXT("hello world")); 
+注意：如果是重载控件类，需要ToolTips。
+①重写PreSubclassWindow函数，在函数中create
+void PreSubclassWindow()
+{
+	m_toolTip.Create(this);
+	m_toolTip.SetMaxTipWidth(500); 
+	m_toolTip.Activate(TRUE);
+}
+②在需要显示的地方添加并Pop即可。
+m_toolTip.AddTool(this, strTipsText); 
+m_toolTip.Pop(); 
+
+3）在对话框 PreTranslateMessage(MSG* pMsg) 中添加
+	if (pMsg->message==WM_MOUSEMOVE)
+		m_ToolTips.RelayEvent(pMsg);
+		
+附加：鼠标坐标的转换
+
+
+
+
+6.消息相关
+系统消息处理函数参数列表为：(UINT nFlags, CPoint point) 的函数
+例如：
+void CWnd::OnMouseMove(UINT, CPoint)
+void CWnd::OnLButtonDblClk(UINT, CPoint)
+void CWnd::OnLButtonDown(UINT, CPoint)
+void CWnd::OnLButtonUp(UINT, CPoint)
+
+其中nFlags意义是：是否有其他按键同时按下(通过 [nFlags & 符号常量] 判断某键位按下状态，以下符号常量可任意组合，即可同时按下几个键)
+符号常量		数值		含义
+MK_CONTROL		8		Ctrl键被按下
+MK_LBUTTON		1		左鼠标键被按下
+MK_MBUTTON		16		中鼠标键被按下
+MK_RBUTTON		2		右鼠标键被按下
+MK_SHIFT		4		Shift键被按下
+
+注意：nFlags 在 PreTranslateMessage(MSG* pMsg) 函数中即为 pMsg->wParam 
+
+
+7.桌面右下角弹窗
+1）弹窗类
+	CMFCDesktopAlertWnd* pPopup = new CMFCDesktopAlertWnd;
+	pPopup->SetAnimationType ((CMFCPopupMenu::ANIMATION_TYPE) m_nAnimation);//动画类型
+	pPopup->SetAnimationSpeed (m_nAnimationSpeed);							//动画时间
+	pPopup->SetTransparency ((BYTE)m_nTransparency);						//透明度
+	pPopup->SetSmallCaption (m_bSmallCaption);								//小标题栏
+	pPopup->SetAutoCloseTime (m_bAutoClose ? m_nAutoCloseTime * 1000 : 0);	//自动关闭时间
+2）弹窗内信息设置
+	CMFCDesktopAlertWndInfo params;
+	params.m_hIcon = m_Icons.ExtractIcon (m_nIcon - 1);
+	params.m_strText = m_strText;
+	params.m_strURL = m_strLink;
+	params.m_nURLCmdID = 101;
+	pPopup->Create (this, params, NULL, m_ptPopup);
+	pPopup->SetIcon (hIcon, FALSE);
+	pPopup->SetWindowText (_T("Message"));
+
+8.Windows 任务栏系统托盘图标
+a）添加(OnInitDialog中)
+	NOTIFYICONDATA tnd;
+	tnd.cbSize = sizeof(NOTIFYICONDATA);
+	tnd.hWnd = this->m_hWnd;
+	tnd.uID = IDR_MAINFRAME;
+	tnd.uFlags = NIF_MESSAGE|NIF_ICON|NIF_TIP;
+	tnd.uCallbackMessage = NULL;//自定义消息，可在处理函数中处理有关系统托盘的消息(如右键单击)
+	tnd.hIcon = LoadIcon(AfxGetInstanceHandle(),MAKEINTRESOURCE(IDR_MAINFRAME));
+	//m_tnd.hIcon = m_hIcon;//or 
+	CString strTip = _T("MFC_Everthing");
+	wcscpy_s(tnd.szTip, strTip);
+
+	//Add
+	Shell_NotifyIcon(NIM_ADD,&tnd);
+	
+b）删除(OnCancel中)
+	NOTIFYICONDATA tnd;
+	tnd.cbSize = sizeof(NOTIFYICONDATA);
+	tnd.hWnd = this->m_hWnd;
+	tnd.uID = IDR_MAINFRAME;
+	Shell_NotifyIcon(NIM_DELETE,&tnd);
+	
+	
+7.Create字体
+VERIFY(m_XAxisFont.CreateFont(
+		10,                        // nHeight
+		6,                         // nWidth
+		-900,                      // nEscapement
+		0,                         // nOrientation
+		FW_NORMAL,                 // nWeight
+		FALSE,                     // bItalic
+		FALSE,                     // bUnderline
+		0,                         // cStrikeOut
+		ANSI_CHARSET,              // nCharSet
+		OUT_DEFAULT_PRECIS,        // nOutPrecision
+		CLIP_DEFAULT_PRECIS,       // nClipPrecision
+		DEFAULT_QUALITY,           // nQuality
+		DEFAULT_PITCH | FF_SWISS,  // nPitchAndFamily
+		_T("X-Axis")));
+		
+8.获取窗口某点的RGB数值
+int nWidth=GetSystemMetrics(SM_CXSCREEN);
+int nHeight=GetSystemMetrics(SM_CYSCREEN); 
+for(int i=0;i<nWidth;i++)
+{
+	for(int j=0;j<nHeight;j++)
+	{
+		HDC hDC = ::GetDC(NULL);
+		CPoint pt;
+		pt.x=nWidth;
+		pt.y=nHeight;
+		COLORREF clr = ::GetPixel(hDC, pt.x, pt.y);
+	}
+}
+
+9.鼠标形状更改
+::SetCursor(::LoadCursor(AfxGetResourceHandle(), MAKEINTRESOURCE(IDC_CURSOR_COLOR_DROP)));
+::SetCursor(AfxGetApp()->LoadStandardCursor(IDC_ARROW));
+
+
+10.exe 后台运行
+OnInitDialog加入：
+
+	//启动隐藏主窗口和任务栏
+	ModifyStyleEx(WS_EX_APPWINDOW, WS_EX_TOOLWINDOW); //隐藏任务栏
+	WINDOWPLACEMENT wp;
+	wp.length=sizeof(WINDOWPLACEMENT);
+	//GetWindowPlacement(&wp);
+	wp.flags=WPF_RESTORETOMAXIMIZED;
+	wp.showCmd=SW_HIDE;
+	SetWindowPlacement(&wp);
+	
+11.Win32向窗口发送消息
+#define WM_NOTIFY_CUSTOM	(WM_USER + 1000)
+
+MFC程序：
+在窗口初始化中设置属性：
+::SetProp(m_hWnd, L"DVInterface", (HANDLE)1);
+
+Win32程序：
+#include <comdef.h>
+#include <Shlwapi.h>
+BOOL NotifyWindow(LPCTSTR lpszProperty,BOOL bResult)//bResult是要通知的数据
+{
+	HWND hWndPrevious = ::GetWindow(::GetDesktopWindow(), GW_CHILD);
+	while (::IsWindow(hWndPrevious))
+	{
+		if (::GetProp(hWndPrevious, lpszProperty))
+		{
+			::PostMessage(hWndPrevious, WM_NOTIFY_TTSW2L, (WPARAM)bResult, (LPARAM)0);
+			std::cout << "窗口消息已发送" << endl;
+			return TRUE;
+		}
+
+		hWndPrevious = ::GetWindow(hWndPrevious, GW_HWNDNEXT);
+	}
+
+	std::cout << "未找到窗口" << endl;
+	return FALSE;
+}
+
+
+
+
+
+
+
+
+
+

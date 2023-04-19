@@ -1,0 +1,13 @@
+#include <Winsock2.h>
+
+WSADATA wsaData;
+WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+char szIPBuffer[1024];
+gethostname(szIPBuffer, sizeof(szIPBuffer));
+
+struct hostent *host = gethostbyname(szIPBuffer);
+CStringA strHostFullName(host->h_name);
+strHostFullName.MakeLower();
+int nFind = strHostFullName.Find("sonix.group");
+WSACleanup();			

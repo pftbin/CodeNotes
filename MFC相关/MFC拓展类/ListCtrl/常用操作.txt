@@ -1,0 +1,56 @@
+1.初始化
+void InitFailQuestionSndList()
+{
+	UINT uiStyleEx = 0;
+	uiStyleEx = m_list.GetExtendedStyle();
+	uiStyleEx |= LVS_EX_GRIDLINES|LVS_EX_INFOTIP|LVS_EX_FULLROWSELECT;
+
+	m_list.ModifyStyle(LVS_NOCOLUMNHEADER,LVS_SHOWSELALWAYS);
+	m_list.SetExtendedStyle(uiStyleEx); 
+
+	CString strText;
+	strText.LoadString(IDC_OID_WND_TEXT_PHONETIC_ALPHABET_INDEX);
+	m_list.InsertColumn(0, strText);
+
+	strText.LoadString(IDC_OID_WND_TEXT_PHONETIC_ALPHABET_SOUND);
+	m_list.InsertColumn(1, strText);
+	CRect rect;
+	m_list.GetWindowRect(&rect);
+	m_list.SetColumnWidth(0,rect.Width()/3);
+	m_list.SetColumnWidth(1,LVSCW_AUTOSIZE_USEHEADER);
+	m_list.EnableToolTips(TRUE);
+}
+
+2.自定义Item颜色
+ON_NOTIFY(NM_CUSTOMDRAW, IDC_LIST_ISP0, &C_XXXDlg::OnNMCustomdrawList)	//Dialog
+ON_NOTIFY_REFLECT(NM_CUSTOMDRAW,&C_XXXList::OnNMCustomdrawList)			//List
+void C_XXXDlg::OnNMCustomdrawList(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	NMLVCUSTOMDRAW* pLVCD = reinterpret_cast<NMLVCUSTOMDRAW*>(pNMHDR);
+	*pResult = 0;
+	if(CDDS_PREPAINT == pLVCD->nmcd.dwDrawStage)        
+	{
+		*pResult = CDRF_NOTIFYITEMDRAW;
+	}
+	else if(CDDS_ITEMPREPAINT == pLVCD->nmcd.dwDrawStage)
+	{
+		int nItem = pLVCD->nmcd.dwItemSpec;
+		CString strResultFlag = m_list.GetItemText(nItem,1);
+		if (strResultFlag == _T("WARNING"))
+		{
+			pLVCD->clrTextBk = RGB(255,255,0);			//yellow
+		}
+		else if (strResultFlag == _T("FAIL"))
+		{
+			pLVCD->clrTextBk = RGB(255,0,0);			//red
+		}
+		else
+		{
+			pLVCD->clrTextBk = m_list.GetBkColor();		//default
+		}
+
+		*pResult = CDRF_DODEFAULT;
+	}
+}
+
+
