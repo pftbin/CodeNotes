@@ -269,7 +269,7 @@ if (fileDlg.DoModal() == IDOK)
 delete pFilePathBuffer;
 
 Ex:选择单个文件
-	CString strFilter = _T("Ini Files (*.ini;)|*.ini||");
+	CString strFilter = _T("Ini Files (*.ini;)|*.ini;*.INI||");
 	UINT nOpenFlags = OFN_HIDEREADONLY|OFN_NOCHANGEDIR|OFN_FILEMUSTEXIST;
 	CFileDialog fileDlg(TRUE, NULL, NULL, nOpenFlags, strFilter,this);
 	fileDlg.m_ofn.lpstrTitle = _T("Import File");
