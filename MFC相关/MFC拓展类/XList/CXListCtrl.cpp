@@ -215,6 +215,9 @@ void CXListCtrl::HideEditCtrl()
 
 			UpdateItem(m_nEditItem, m_nEditSubItem);
 			m_pEditWnd->DestroyWindow();
+
+			if (IsWindow(this->GetParent()->m_hWnd))
+				::PostMessage(this->GetParent()->m_hWnd, DF_LIST_MESSAGE_EDIT_HIDE, (WPARAM)m_nEditItem, (LPARAM)m_nEditSubItem);  //Send Message to Parent
 		}
 
 		m_nEditItem = -1;
