@@ -12,8 +12,8 @@ pWnd->SetWindowPos(NULL,nx,ny,cx,cy,SWP_NOZORDER);//通过改变 nx/ny移动控�
 GetSystemMetrics(SM_CXFRAME); 
 GetSystemMetrics(SM_CYFRAME); //获取标题栏的左上角点位置；
 GetSystemMetrics(SM_CYSIZE); //获取标题栏的高度。
-GetSystemMetrics(SM_CXVSCROLL);
-GetSystemMetrics(SM_CYHSCROLL);//获取滚动条宽度/高度
+GetSystemMetrics(SM_CXVSCROLL);//获取垂直滚动条宽度
+GetSystemMetrics(SM_CYHSCROLL);//获取水平滚动条高度
 
 
 3.弹出右键菜单（Menu）

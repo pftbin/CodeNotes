@@ -550,6 +550,35 @@ BOOL CXListCtrl::PreTranslateMessage(MSG* pMsg)
 		{
 			if (m_pEditWnd != NULL)
 			{
+				//Update Edit Text
+				if (CheckSubItemIndex(m_nEditItem, m_nEditSubItem))
+				{
+					XLISTCTRL_ITEM_DATA* pXLCD = NULL;
+					pXLCD = GetXListCtrlData(m_nEditItem);
+					if (pXLCD != NULL)
+					{
+						UINT uiEditType = pXLCD->arSubItemData[m_nEditSubItem]->uiEditType;
+
+						CString strText = _T(""), strFinalText = _T("");
+						m_pEditWnd->GetWindowText(strText);
+						if (uiEditType == EditType_Text)
+						{
+							strFinalText = strText;
+						}
+						if (uiEditType == EditType_Int)
+						{
+							int nValue = _ttoi(strText);
+							strFinalText.Format(_T("%d"), nValue);
+						}
+						if (uiEditType == EditType_Double)
+						{
+							double dValue = _ttof(strText);
+							strFinalText.Format(_T("%.1f"), dValue);
+						}
+						m_pEditWnd->SetWindowText(strFinalText);
+					}
+				}
+
 				if (m_pEditWnd->GetSafeHwnd() != pMsg->hwnd)
 				{
 					if (!OnEditCtrlChange())
@@ -893,9 +922,9 @@ void CXListCtrl::DrawButton(int nItem,
 	int nCXYCheckBox = 16;
 	CRect rcButton(0,0,0,0);
 	rcButton = rcSubItem;
-	rcButton.left += 1;
+	rcButton.left += 2;
 	rcButton.top  += 1;
-	rcButton.right -= 1;
+	rcButton.right -= 2;
 	rcButton.bottom -= 1;
 
 	// Fill rect around CheckBox with white
@@ -951,7 +980,7 @@ void CXListCtrl::DrawButton(int nItem,
 		pDC->SetBkMode(TRANSPARENT);
 		pDC->SetTextColor(crText);
 		pDC->SetBkColor(crBkgnd);
-		pDC->DrawText(strText, &rcText, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+		pDC->DrawText(strText, &rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 	}
 }
 
@@ -1522,7 +1551,7 @@ BOOL CXListCtrl::SetCheckState(int nItem, int nSubItem, int nCheckedState)
 	return TRUE;
 }
 
-void CXListCtrl::EnableEditCtrl(int nItem, int nSubItem, BOOL bEnable)
+void CXListCtrl::EnableEditCtrl(int nItem, int nSubItem, BOOL bEnable, EditType editType)
 {
 	if (CheckSubItemIndex(nItem, nSubItem))
 	{
@@ -1531,6 +1560,7 @@ void CXListCtrl::EnableEditCtrl(int nItem, int nSubItem, BOOL bEnable)
 		if (pXLCD != NULL)
 		{
 			pXLCD->arSubItemData[nSubItem]->bEditCtrlEnable = bEnable;
+			pXLCD->arSubItemData[nSubItem]->uiEditType = editType;
 			UpdateItem(nItem, nSubItem);
 		}
 	}

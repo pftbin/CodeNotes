@@ -31,6 +31,7 @@ struct XLISTCTRL_SUBITEM_DATA
 		nImage        = -1;
 		crText        = ::GetSysColor(COLOR_WINDOWTEXT);
 		crBackground  = ::GetSysColor(COLOR_WINDOW);
+		uiEditType	  = 0;
 		bEditCtrlEnable = FALSE;
 		bComboBoxEnable = FALSE;
 		bCheckBoxEnable = FALSE;
@@ -48,6 +49,7 @@ struct XLISTCTRL_SUBITEM_DATA
 	COLORREF crBackground;
 
 	// For EditCtrl
+	UINT uiEditType;
 	BOOL bEditCtrlEnable;
 
 	// For CheckBox
@@ -128,7 +130,13 @@ public:
 	virtual BOOL IsSubItemEnabled(int nItem, int nSubItem);
 	virtual void EnableSubItem(int nItem, int nSubItem, BOOL bEnable);
 
-	virtual void EnableEditCtrl(int nItem, int nSubItem, BOOL bEnable);
+	enum EditType
+	{
+		EditType_Text = 0,
+		EditType_Int,
+		EditType_Double,
+	};
+	virtual void EnableEditCtrl(int nItem, int nSubItem, BOOL bEnable, EditType editType = EditType_Text);
 	virtual void EnableCheckBox(int nItem, int nSubItem, BOOL bEnable);
 	virtual void EnableComboBox(int nItem, int nSubItem, BOOL bEnable);
 	virtual void EnableButton(int nItem, int nSubItem, BOOL bEnable);
