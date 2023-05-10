@@ -235,6 +235,25 @@ CString fileName = aaa.Left(aaa.GetLength()-aaa.ReverseFind('/')); //获取文�
 CString fileName = aaa.Right(aaa.GetLength()-aaa.ReverseFind('/')-1); //获取到bbb.txt
 CString firstFileName = fileName.Left(fileName.Find('.')); //去除后缀获取到bbb
 
+static CString NameFromPath(CString& strFullPath, BOOL bExtension)
+{
+	CString strFinalName;
+	if (strFullPath.IsEmpty())
+		return strFinalName;
+
+	strFullPath.Replace(_T("\\"), _T("/"));
+	CString strFullName = strFullPath.Right(strFullPath.GetLength() - strFullPath.ReverseFind('/') - 1); //带后缀的文件名
+	CString strFirstName = strFullName.Left(strFullName.Find('.')); //去除后缀
+
+	if (bExtension)
+		strFinalName = strFullName;
+	else
+		strFinalName = strFirstName;
+
+	return strFinalName;
+}
+
+
 6.一次打开多个文件
 CArray<CString, CString> arImagePath;
 CString strFileFilter = _T("bmp Files (*.bmp;*.BMP;)|*.bmp;|r10 Files (*.r10;*.R10;)|*.r10||");
