@@ -49,7 +49,7 @@ CString strAppForder;
 _TCHAR szNowModulePath[MAX_PATH] = {0};
 GetCurrentDirectory(MAX_PATH,szNowModulePath);
 strAppForder = szNowModulePath;
-//
+//当前App所在文件夹
 CString GGetAppPath()
 {
 	TCHAR exeFullName[MAX_PATH]={0};
@@ -69,6 +69,7 @@ CString GGetAppPath()
 	return mPath;
 }
 
+
 //设置当前工作目录
 	CString AppFolder;
 	AppFolder.Format(_T("%s"), GetAppFolder());
@@ -78,6 +79,7 @@ CString GGetAppPath()
 	GetCurrentDirectory(MAX_PATH, szCurDirectory);
 	CString strCurDirectory; strCurDirectory = szCurDirectory;
 	CString strLogInfo;strLogInfo.Format(_T("当前进程工作目录 %s"), strCurDirectory);
+
 
 //一次创建多层文件夹
 if (!::PathFileExists(strDirectoryPath))
@@ -115,27 +117,100 @@ if (!::PathFileExists(strDirectoryPath))
 	}
 
 
-2.遍历文件夹的指定后缀文件
-	CString strFolderPath = szBuffer;
-	if (GetFileAttributes(strFolderPath) == FILE_ATTRIBUTE_DIRECTORY)//is folder
-	{
-		int nCount = 0;
-		CString strFullFileName = _T("");
+2.遍历文件夹
+//统计指定后缀文件（遍历子文件夹）
+CString strFolderPath = szBuffer;
+if (GetFileAttributes(strFolderPath) == FILE_ATTRIBUTE_DIRECTORY)//is folder
+{
+	int nCount = 0;
+	CString strFullFileName = _T("");
 
-		WIN32_FIND_DATA findFileData;
-		HANDLE hFound = FindFirstFile(strFolderPath + _T("\\*.csv"),&findFileData);
-		if (hFound != INVALID_HANDLE_VALUE )
-		{
-			strFullFileName = findFileData.cFileName;
-			m_mapWinCfgScalerFiles[nCount++] = strFullFileName;
-		}
-		while(FindNextFile(hFound,&findFileData))
-		{
-			strFullFileName = findFileData.cFileName;
-			m_mapWinCfgScalerFiles[nCount++] = strFullFileName;
-		}
-		m_nWinConfigScalerFileCnt = nCount;
+	WIN32_FIND_DATA findFileData;
+	HANDLE hFound = FindFirstFile(strFolderPath + _T("\\*.csv"),&findFileData);
+	if (hFound != INVALID_HANDLE_VALUE )
+	{
+		strFullFileName = findFileData.cFileName;
+		m_mapWinCfgScalerFiles[nCount++] = strFullFileName;
 	}
+	while(FindNextFile(hFound,&findFileData))
+	{
+		strFullFileName = findFileData.cFileName;
+		m_mapWinCfgScalerFiles[nCount++] = strFullFileName;
+	}
+	m_nWinConfigScalerFileCnt = nCount;
+}
+//统计文件夹下所有文件（遍历子文件夹）
+void GetPathAllFile(CString strDir, std::vector<CString>& vFilePathList)
+{
+	CFileFind finder;
+	BOOL isNotEmpty = finder.FindFile(strDir + _T("*.*"));//总文件夹，开始遍历 
+	while (isNotEmpty)
+	{
+		isNotEmpty = finder.FindNextFile();//查找文件 
+		CString filename = finder.GetFilePath();//获取文件的路径，可能是文件夹，可能是文件 
+		if (!(finder.IsDirectory()))
+		{
+			//如果是文件则加入文件列表 
+			vFilePathList.push_back(filename);//将一个文件路径加入容器 
+		}
+		else
+		{
+			//递归遍历用户文件夹，跳过非用户文件夹 
+			if (!(finder.IsDots() || finder.IsHidden() || finder.IsSystem() || finder.IsTemporary() || finder.IsReadOnly()))
+			{
+				GetPathAllFile(filename + _T("\\"), vFilePathList);
+			}
+		}
+	}
+}
+
+//判断指定文件在文件夹下是否存在（遍历子文件夹）
+BOOL FindFullNameFile(CString strFolderPath, CString strFullName, CString& strTargetFile)
+{
+	strTargetFile.Empty();
+	if (strFolderPath.IsEmpty() || strFullName.IsEmpty())
+		return FALSE;
+
+	CString strExtension; TCHAR ExtensionBuf[128] = { 0 };
+	_wsplitpath_s(strFullName, NULL, 0, NULL, 0, NULL, 0, ExtensionBuf, 128);
+	strExtension = ExtensionBuf;
+	if (strExtension.IsEmpty())
+		return FALSE;
+
+	return GetPathSpecFile(strFolderPath, strFullName, strTargetFile);
+｝
+BOOL GetPathSpecFile(CString& strDir, CString& strSpecFileName, CString& strSpecFilePath)
+{
+	CFileFind finder;
+	CString currentPath = strDir + "\\*.*";
+	BOOL bWorking = finder.FindFile(currentPath);
+
+	while (bWorking)
+	{
+		bWorking = finder.FindNextFile();
+
+		if (finder.IsDots())
+			continue;
+
+		if (finder.IsDirectory())
+		{
+			if (!GetPathSpecFile(finder.GetFilePath(), strSpecFileName, strSpecFilePath))
+				continue;
+			else
+				return TRUE;
+		}
+
+		if (finder.GetFileName() == strSpecFileName)
+		{
+			strSpecFilePath = finder.GetFilePath();
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+
 
 3.获取文件大小（字节数）
 //A
@@ -177,13 +252,50 @@ File.Close();
 
 5.文件的复制，移动，删除，更名
 
-复制文件
+//复制文件
 BOOL CopyFile(LPCTSTR lpExistingFileName, LPCTSTR lpNewFileName, BOOL bFailIfExists);
 bFailIfExists用来制定如果目标文件已经存在时，是否中止复制操作，返回FALSE。
 例，把"d://1.txt"复制到"d://2.txt"，即使"d://2.txt"已经存在。
 BOOL bRet = CopyFile(_T("d://1.txt"), _T("d://2.txt"), FALSE);
 
-移动文件
+//复制文件夹
+BOOL CopyDirectory(CString strSrcPath,CString strDestPath)
+{
+    
+    if (strSrcPath.IsEmpty())
+        return TRUE;
+	if (strSrcPath == strDestPath)
+		return TRUE;
+    
+	CFileFind m_sFileFind;
+    if (!m_sFileFind.FindFile(strDestPath))
+        CreateDirectory(strDestPath,NULL);//创建目标文件夹
+
+    CFileFind finder;
+    CString path;path.Format(_T("%s/*.*"),strSrcPath);
+    //AfxMessageBox(path);
+    BOOL bWorking = finder.FindFile(path);
+    while (bWorking)
+    {
+        bWorking = finder.FindNextFile();
+        //AfxMessageBox(finder.GetFileName());
+        if (finder.IsDirectory() && !finder.IsDots())//是文件夹 而且 名称不含 . 或 ..  
+        {
+            CopyDirectory(finder.GetFilePath(),strDestPath+"/"+finder.GetFileName());//递归创建文件夹+"/"+finder.GetFileName()  
+        }
+        else
+        {
+			//是文件，则直接复制 
+            CopyFile(finder.GetFilePath(),strDestPath+"/"+finder.GetFileName(),FALSE);
+			//AfxMessageBox("复制文件"+finder.GetFilePath());//+finder.GetFileName() 
+        }
+    }
+
+    return TRUE;
+}
+
+
+//移动文件
 BOOL MoveFile( LPCTSTR lpExistingFileName, LPCTSTR lpNewFileName );
 这个函数可以移一个文件，或目录（包括子目录），例，
 MoveFile(_T("d://1.txt"), _T("d://2.txt"));
@@ -194,6 +306,12 @@ BOOL MoveFileEx( LPCTSTR lpExistingFileName, LPCTSTR lpNewFileName, DWORD dwFlag
 dwFlags的意义： 
 MOVEFILE_REPLACE_EXISTING 如果目标文件存在是否替代它 。
 MOVEFILE_DELAY_UNTIL_REBOOT 文件移动准备，下次启动系统时执行移动作业。
+
+
+
+
+
+
 
 删除目录的子文件/文件夹
 void RecursiveDelete(CString strFolderPath)
@@ -221,19 +339,43 @@ void RecursiveDelete(CString strFolderPath)
 	}
 }
 
-删除文件
+//删除文件
 BOOL DeleteFile( LPCTSTR lpFileName );
 static void PASCAL CFile::Remove(LPCTSTR lpszFileName);
 
-文件更名
+//文件更名
 CFile::Rename(pOldName, pNewName);
 
-获取文件名
+//获取文件名
 CString aaa = "C:/test\\aaa\\bbb.txt";
 aaa.Replace("\\", "/");
 CString fileName = aaa.Left(aaa.GetLength()-aaa.ReverseFind('/')); //获取文件夹
 CString fileName = aaa.Right(aaa.GetLength()-aaa.ReverseFind('/')-1); //获取到bbb.txt
 CString firstFileName = fileName.Left(fileName.Find('.')); //去除后缀获取到bbb
+//获取文件名
+CString NameFromPath(CString& strFullPath, BOOL bExtension = TRUE)
+{
+	CString strFinalName;
+	if (strFullPath.IsEmpty())
+		return strFinalName;
+
+	strFullPath.Replace(_T("\\"), _T("/"));
+	CString strFullName = strFullPath.Right(strFullPath.GetLength() - strFullPath.ReverseFind('/') - 1); //带后缀的文件名
+	CString strFirstName = strFullName.Left(strFullName.Find('.')); //去除后缀
+
+	if (bExtension)
+		strFinalName = strFullName;
+	else
+		strFinalName = strFirstName;
+
+	return strFinalName;
+}
+
+//获取后缀
+CString strExtension; TCHAR ExtensionBuf[128] = { 0 };
+_wsplitpath_s(aaa, NULL, 0, NULL, 0, NULL, 0, ExtensionBuf, 128);
+strExtension = ExtensionBuf;
+
 
 static CString NameFromPath(CString& strFullPath, BOOL bExtension)
 {
@@ -295,8 +437,29 @@ Ex:选择单个文件
 	fileDlg.m_ofn.lpstrInitialDir = _T(".\\");
 	if (IDOK == fileDlg.DoModal())
 	{
-		m_strCreatorConfig = fileDlg.GetPathName();
+		CString strFilePath  = fileDlg.GetPathName();
 	}
+//
+CString SelectFile(CString strTitle,CString strFilterText, CString strExtension)
+{
+	CString strDefExt = _T("*.*");
+	CString strFilter = _T("所有文件|*.*||");
+	if (!strFilterText.IsEmpty() && !strExtension.IsEmpty())
+	{
+		strDefExt = strExtension;
+		strFilter.Format(_T("%s (%s)|%s||"), strFilterText.GetBuffer(), strExtension.GetBuffer(), strExtension.GetBuffer());
+	}	
+
+	CString strFilePath = _T("");
+	CFileDialog dlgFile(TRUE, strDefExt, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, strFilter);;
+	if (dlgFile.DoModal() != IDOK)
+		return strFilePath;
+
+	strFilePath = dlgFile.GetPathName();
+	return strFilePath;
+}	
+	
+	
 
 Ex：打开文件或程序
 #include <shellapi.h>
@@ -386,7 +549,6 @@ HRESULT C_CNNToolFunction::SaveImageFile(CString strOutputFilePath, BYTE *pBuffe
 	return hr;
 }
 
-8.更改当前工作目录为exe所在目录
 
 
 
