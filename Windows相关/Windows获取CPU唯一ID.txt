@@ -1,0 +1,13 @@
+#include <iostream>
+#include <intrin.h>
+
+using namespace std;
+
+
+
+//获取CPU唯一ID
+int cpuid[4];
+__cpuid(cpuid, 1);
+char cpuid_buf[17];
+sprintf_s(cpuid_buf, "%08X%08X", cpuid[3], cpuid[0]);
+std::cout << cpuid_buf << std::endl;
