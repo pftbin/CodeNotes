@@ -11,12 +11,19 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+#define IDB_UPARROW                     134//自定义导入资源
+#define IDB_DOWNARROW                   135//自定义导入资源
+
+int  g_SortColumnIndex = 0;
+bool g_SortAscending = false;
+
 /////////////////////////////////////////////////////////////////////////////
 // CXListCtrl
-IMPLEMENT_DYNCREATE(CXListCtrl, CListCtrl)
+IMPLEMENT_DYNCREATE(CXListCtrl, CMFCListCtrl)
 
-BEGIN_MESSAGE_MAP(CXListCtrl, CListCtrl)
+BEGIN_MESSAGE_MAP(CXListCtrl, CMFCListCtrl)
 	//{{AFX_MSG_MAP(CXListCtrl)
+	ON_WM_MEASUREITEM_REFLECT()
 	ON_WM_CREATE()
 	ON_WM_PAINT()
 	ON_WM_DESTROY()
@@ -217,7 +224,10 @@ void CXListCtrl::HideEditCtrl()
 			m_pEditWnd->DestroyWindow();
 
 			if (IsWindow(this->GetParent()->m_hWnd))
-				::PostMessage(this->GetParent()->m_hWnd, DF_LIST_MESSAGE_EDIT_HIDE, (WPARAM)m_nEditItem, (LPARAM)m_nEditSubItem);  //Send Message to Parent
+			{
+				DWORD Item_SubItem = ITEM_SUBITEM_SET(m_nEditItem, m_nEditSubItem);
+				::PostMessage(this->GetParent()->m_hWnd, DF_LIST_MESSAGE_EDIT_HIDE, (WPARAM)this->m_hWnd, (LPARAM)Item_SubItem);  //Send Message to Parent
+			}		
 		}
 
 		m_nEditItem = -1;
@@ -498,6 +508,35 @@ void CXListCtrl::UpdateEditInfo(int iItem, int iSubItem, LPCTSTR lpszNewText)
 	}
 }
 
+// 比较函数
+static int CALLBACK MyCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+	// 从参数中提取所需比较的两行数据,数据类型与SortColumn的SetItemData有关
+	int nRow1 = (int)lParam1;
+	int nRow2 = (int)lParam2;
+	CMFCListCtrl* pList = (CMFCListCtrl*)lParamSort;
+	CString strText1 = pList->GetItemText(nRow1, g_SortColumnIndex);
+	CString strText2 = pList->GetItemText(nRow2, g_SortColumnIndex);
+	// 文字型比较
+	if (g_SortAscending)
+		return strText1.CompareNoCase(strText2);
+	else
+		return strText2.CompareNoCase(strText1);
+
+	return 0;
+}
+BOOL CXListCtrl::SortColumn(int iSubItem, BOOL bAscending)
+{
+	int count = GetItemCount();
+	for (int iItem = 0; iItem < count; iItem++)
+	{
+		SetItemData(iItem, (DWORD_PTR)iItem); //每行的比较关键字
+	}
+	SortItems(MyCompareProc, (DWORD_PTR)this);
+
+	return TRUE;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 BOOL CXListCtrl::PreTranslateMessage(MSG* pMsg)
 {
@@ -630,23 +669,23 @@ BOOL CXListCtrl::PreTranslateMessage(MSG* pMsg)
 		}
 	}
 
-	return CListCtrl::PreTranslateMessage(pMsg);
+	return CMFCListCtrl::PreTranslateMessage(pMsg);
 }
 
 BOOL CXListCtrl::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult)
 {
-	return CListCtrl::OnWndMsg(message, wParam, lParam, pResult);
+	return CMFCListCtrl::OnWndMsg(message, wParam, lParam, pResult);
 }
 
 void CXListCtrl::OnParentNotify(UINT message, LPARAM lParam)
 {
-	CListCtrl::OnParentNotify(message, lParam);
+	CMFCListCtrl::OnParentNotify(message, lParam);
 }
 
 BOOL CXListCtrl::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	BOOL bReturn = FALSE;
-	bReturn = CListCtrl::OnCommand(wParam, lParam);
+	bReturn = CMFCListCtrl::OnCommand(wParam, lParam);
 
 	HWND hCtrlWnd = NULL;
 	HWND hFromWnd = NULL;
@@ -693,18 +732,33 @@ BOOL CXListCtrl::OnCommand(WPARAM wParam, LPARAM lParam)
 // PreSubclassWindow
 void CXListCtrl::PreSubclassWindow()
 {
-	CListCtrl::PreSubclassWindow();
+	CMFCListCtrl::PreSubclassWindow();
 
 	// for Dialog based applications, this is a good place
 	// to subclass the header control because the OnCreate()
 	// function does not get called.
+
+	CRect rcwin;
+	GetWindowRect(rcwin);
+
+	WINDOWPOS wp;
+	wp.hwnd = m_hWnd;
+	wp.cx = rcwin.Width();
+	wp.cy = rcwin.Height();
+	wp.flags = SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER;
+	SendMessage(WM_WINDOWPOSCHANGED, 0, (LPARAM)&wp);
+}
+
+void CXListCtrl::MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct)
+{
+	lpMeasureItemStruct->itemHeight = 50;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // OnCreate
 int CXListCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
-	return CListCtrl::OnCreate(lpCreateStruct);
+	return CMFCListCtrl::OnCreate(lpCreateStruct);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1279,10 +1333,10 @@ void CXListCtrl::DrawText(int nItem,
 	{
 		// get text justification
 		HDITEM hditem;
-		CHeaderCtrl* pHeaderCtrl = NULL;
-
 		hditem.fmt = 0;
-		pHeaderCtrl = GetHeaderCtrl();
+
+		//CHeaderCtrl* pHeaderCtrl = GetHeaderCtrl();
+		CMFCHeaderCtrl* pHeaderCtrl = &(GetHeaderCtrl());
 		if (pHeaderCtrl != NULL)
 		{
 			hditem.mask = HDI_FORMAT;
@@ -1320,7 +1374,7 @@ BOOL CXListCtrl::GetSubItemRect(int nItem,
 		return FALSE;
 	}
 
-	BOOL bRC = CListCtrl::GetSubItemRect(nItem, nSubItem, nArea, rcSubItem);
+	BOOL bRC = CMFCListCtrl::GetSubItemRect(nItem, nSubItem, nArea, rcSubItem);
 
 	if (nSubItem == 0)
 	{
@@ -1338,7 +1392,7 @@ BOOL CXListCtrl::GetSubItemRect(int nItem,
 BOOL CXListCtrl::HitTestEx(CPoint& point, int& nItem, int& nSubItem, UINT* pFlags) const
 {
 	nSubItem = -1;
-	nItem = CListCtrl::HitTest(point, pFlags);
+	nItem = CMFCListCtrl::HitTest(point, pFlags);
 
 	if (nItem < 0)
 	{
@@ -1365,11 +1419,11 @@ BOOL CXListCtrl::HitTestEx(CPoint& point, int& nItem, int& nSubItem, UINT* pFlag
 		nColumnCount = pThisListCtrl->GetColumnCount();
 	}
 
-	CListCtrl::GetItemRect(nItem, &rcItem, LVIR_BOUNDS);
+	CMFCListCtrl::GetItemRect(nItem, &rcItem, LVIR_BOUNDS);
 
 	for (nColumnIndex = 0; nColumnIndex < nColumnCount; ++nColumnIndex)
 	{
-		nColumnWidth = CListCtrl::GetColumnWidth(nColumnIndex);
+		nColumnWidth = CMFCListCtrl::GetColumnWidth(nColumnIndex);
 		rcItem.right = rcItem.left + nColumnWidth;
 
 		if (rcItem.PtInRect(point))
@@ -1386,12 +1440,12 @@ BOOL CXListCtrl::HitTestEx(CPoint& point, int& nItem, int& nSubItem, UINT* pFlag
 
 void CXListCtrl::OnNcMouseMove(UINT nHitTest, CPoint point)
 {
-	CListCtrl::OnNcMouseMove(nHitTest, point);
+	CMFCListCtrl::OnNcMouseMove(nHitTest, point);
 }
 
 void CXListCtrl::OnMouseMove(UINT nFlags, CPoint point)
 {
-	CListCtrl::OnMouseMove(nFlags, point);
+	CMFCListCtrl::OnMouseMove(nFlags, point);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1399,7 +1453,7 @@ void CXListCtrl::OnMouseMove(UINT nFlags, CPoint point)
 void CXListCtrl::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	SetCapture();
-	CListCtrl::OnLButtonDown(nFlags, point);
+	CMFCListCtrl::OnLButtonDown(nFlags, point);
 
 	int nItem = -1;
 	int nSubItem = -1;
@@ -1442,7 +1496,10 @@ void CXListCtrl::OnLButtonDown(UINT nFlags, CPoint point)
 			else if (pXLCD->arSubItemData[nSubItem]->bButtonEnable)
 			{
 				if (IsWindow(this->GetParent()->m_hWnd))
-					::PostMessage(this->GetParent()->m_hWnd,DF_LIST_MESSAGE_CLICK_BUTTON , (WPARAM)nItem, (LPARAM)nSubItem);  //Send Message to Parent
+				{
+					DWORD Item_SubItem = ITEM_SUBITEM_SET(nItem, nSubItem);
+					::PostMessage(this->GetParent()->m_hWnd, DF_LIST_MESSAGE_CLICK_BUTTON, (WPARAM)this->m_hWnd, (LPARAM)Item_SubItem);  //Send Message to Parent
+				}
 			}
 		}
 	}
@@ -1452,13 +1509,13 @@ void CXListCtrl::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	if (GetCapture() == this)
 	{
-		CListCtrl::OnLButtonUp(nFlags, point);
+		CMFCListCtrl::OnLButtonUp(nFlags, point);
 	}
 }
 
 void CXListCtrl::OnRButtonDown(UINT nFlags, CPoint point)
 {
-	CListCtrl::OnRButtonDown(nFlags, point);
+	CMFCListCtrl::OnRButtonDown(nFlags, point);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1471,7 +1528,7 @@ void CXListCtrl::OnPaint()
 	}
 	else
 	{
-		CListCtrl::OnPaint();
+		CMFCListCtrl::OnPaint();
 
 		CDC* pDC = GetDC();
 		int nSavedDC = pDC->SaveDC();
@@ -1479,11 +1536,12 @@ void CXListCtrl::OnPaint()
 		CRect rc;
 		GetWindowRect(&rc);
 		ScreenToClient(&rc);
-		CHeaderCtrl* pHC = GetHeaderCtrl();
-		if (pHC != NULL)
+		//CHeaderCtrl* pHeaderCtrl = GetHeaderCtrl();
+		CMFCHeaderCtrl* pHeaderCtrl = &(GetHeaderCtrl());
+		if (pHeaderCtrl != NULL)
 		{
 			CRect rcH;
-			pHC->GetItemRect(0, &rcH);
+			pHeaderCtrl->GetItemRect(0, &rcH);
 			rc.top += rcH.bottom;
 		}
 		rc.top += 10;
@@ -1510,7 +1568,7 @@ void CXListCtrl::OnSysColorChange()
 {
 	TRACE(_T("in CXListCtrl::OnSysColorChange\n"));
 
-	CListCtrl::OnSysColorChange();
+	CMFCListCtrl::OnSysColorChange();
 
 	m_cr3DFace        = ::GetSysColor(COLOR_3DFACE);
 	m_cr3DHighLight   = ::GetSysColor(COLOR_3DHIGHLIGHT);
@@ -1530,7 +1588,7 @@ void CXListCtrl::OnSysColorChange()
 void CXListCtrl::OnDestroy()
 {
 	HideAllCtrls();
-	CListCtrl::OnDestroy();
+	CMFCListCtrl::OnDestroy();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1720,8 +1778,8 @@ void CXListCtrl::UpdateItem(int nItem, int nSubItem)
 // GetColumnCount
 int CXListCtrl::GetColumnCount()
 {
-	CHeaderCtrl* pHeaderCtrl = NULL;
-	pHeaderCtrl = GetHeaderCtrl();
+	//CHeaderCtrl* pHeaderCtrl = GetHeaderCtrl();
+	CMFCHeaderCtrl* pHeaderCtrl = &(GetHeaderCtrl());
 	if (pHeaderCtrl != NULL)
 	{
 		return pHeaderCtrl->GetItemCount();
@@ -1866,4 +1924,22 @@ void CXListCtrl::OnColumnClick(NMHDR* pNMHDR, LRESULT* pResult)
 	LPNMLISTVIEW lpNMListView = (LPNMLISTVIEW)pNMHDR;
 	lpNMListView;
 	*pResult = 0;
+
+	//点击Header则进行排序
+	int nSubItem = lpNMListView->iSubItem;
+	if (nSubItem != -1)
+	{
+		if (g_SortColumnIndex == nSubItem)
+		{
+			g_SortAscending = !g_SortAscending;
+		}
+		else
+		{
+			g_SortColumnIndex = nSubItem;
+			g_SortAscending = true;
+		}
+
+		if (SortColumn(g_SortColumnIndex, g_SortAscending))
+			SetSortColumn(g_SortColumnIndex, g_SortAscending);//绘制Header图标
+	}
 }

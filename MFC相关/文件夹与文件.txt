@@ -233,14 +233,95 @@ if (FW1File.Open(strFilePath, CFile::modeRead, NULL))
 }
 FW1File.Close();
 
-4.修改文本文件
+4.文本文件操作
+
+//读取
+void CFileView::OnFileRead()
+{
+	// TODO: 在此添加命令处理程序代码
+	//方法一
+	/*FILE *pFile ;
+	fopen_s(&pFile , "1.txt" , "r") ;
+	char str[100];
+	
+	fseek(pFile , 0 , SEEK_END) ;
+	int len = ftell(pFile) ;
+	rewind(pFile) ;
+    fread(str , 1 , len , pFile) ;
+	str[len] = '\0' ;
+	CClientDC dc(this) ;
+	dc.TextOut(0 ,0 , (CString)str) ;
+	fclose(pFile) ;*/
+	//方法二
+	/*ifstream ifs("2.txt") ;
+	char str[100] ;
+	memset(str , 0 , 100) ;
+	ifs.read(str , 100) ;
+	ifs.close() ;
+	MessageBox((CString)str) ;*/
+	//方法三
+	/*HANDLE hFile ;
+	hFile = CreateFile(TEXT("3.txt") , GENERIC_READ , 0 , 
+		               NULL , OPEN_EXISTING , FILE_ATTRIBUTE_NORMAL , NULL) ;
+	TCHAR szBuffer[100] ;
+	DWORD dwNum ;
+	ReadFile(hFile , szBuffer , 100 , &dwNum , NULL) ;
+	szBuffer[dwNum/2] = '\0' ;//szBuffer是按字符计数 ， dwNum是按字节计数
+	CloseHandle(hFile) ;
+	MessageBox(szBuffer) ;*/
+	//方法四
+	CFile file(TEXT("4.txt") , CFile::modeRead) ;
+	
+	UINT len = file.GetLength() ;
+	TCHAR *szBuffer ;
+	szBuffer = new TCHAR[len / 2 + 1] ;
+	file.Read(szBuffer , len) ;
+	szBuffer[len / 2] = 0 ;
+	file.Close() ;
+	MessageBox(szBuffer) ;
+ 
+}
+
+//写入
+void CFileView::OnFileWrite()
+{
+	// TODO: 在此添加命令处理程序代码
+	//方法一
+	/*//FILE *pFile = fopen("1.txt" , "w") ;
+    //pFile = fopen_s()
+	FILE *pFile ;
+	fopen_s(&pFile , "1.txt" , "w") ;
+	fwrite("www.baidu.com" , 1 , strlen("www.baidu.com") , pFile) ;
+	//fseek(pFile , 0 , SEEK_SET) ;
+	//fwrite("testzengjia" , 1 , strlen("testzengjia") , pFile) ;
+	fclose(pFile) ;*/
+//  方法二
+// 	ofstream ofs("2.txt") ;
+// 	ofs.write("www.baidu.com" , strlen("www.baidu.com")) ;
+// 	ofs.close() ;
+	//方法三
+	/*HANDLE hFile ;
+	hFile = CreateFile(TEXT("3.txt") , GENERIC_WRITE , 
+		0 , NULL ,CREATE_NEW , FILE_ATTRIBUTE_NORMAL ,
+		NULL)  ;
+	DWORD dwNum ;
+	WriteFile(hFile , TEXT("http:www.baidu.com") , 
+		sizeof(TCHAR) * strlen("http:www.baidu.com") , &dwNum , NULL) ;
+	CloseHandle(hFile) ;//strlen在此返回的是字符数Unicode编码*/
+	//方法四
+	CFile file(TEXT("4.txt") , CFile::modeCreate | CFile::modeWrite) ;
+	file.Write(TEXT("www.baidu.com") , sizeof(TCHAR) * strlen("www.baidu.com")) ;
+	file.Close() ;
+}
+
+//更新
 CStdioFile File;
 if(File.Open(strFilePath,CFile::typeText|CFile::modeReadWrite))
 {
 	CString strLine;
 	while(File.ReadString(strLine))
 	{
-		if (1)
+		if (1)//根据条件判断是否是目标行
 		{
 			File.Seek(0,CFile::current);
 			File.WriteString(strLine);
@@ -346,14 +427,26 @@ static void PASCAL CFile::Remove(LPCTSTR lpszFileName);
 //文件更名
 CFile::Rename(pOldName, pNewName);
 
-//获取文件名
+//获取文件相关信息
 CString aaa = "C:/test\\aaa\\bbb.txt";
 aaa.Replace("\\", "/");
 CString fileName = aaa.Left(aaa.GetLength()-aaa.ReverseFind('/')); //获取文件夹
 CString fileName = aaa.Right(aaa.GetLength()-aaa.ReverseFind('/')-1); //获取到bbb.txt
 CString firstFileName = fileName.Left(fileName.Find('.')); //去除后缀获取到bbb
+//获取文件夹
+static CString FolderFromPath(CString& strFullPath)
+{
+	CString strFolder = _T("");
+	if (strFullPath.IsEmpty())
+		return strFolder;
+
+	strFullPath.Replace(_T("\\"), _T("/"));
+	strFolder = strFullPath.Left(strFullPath.GetLength() - strFullPath.ReverseFind('/') + 1); //获取文件夹
+
+	return strFolder;
+}
 //获取文件名
-CString NameFromPath(CString& strFullPath, BOOL bExtension = TRUE)
+static CString NameFromPath(CString& strFullPath, BOOL bExtension = TRUE)
 {
 	CString strFinalName;
 	if (strFullPath.IsEmpty())
@@ -362,7 +455,6 @@ CString NameFromPath(CString& strFullPath, BOOL bExtension = TRUE)
 	strFullPath.Replace(_T("\\"), _T("/"));
 	CString strFullName = strFullPath.Right(strFullPath.GetLength() - strFullPath.ReverseFind('/') - 1); //带后缀的文件名
 	CString strFirstName = strFullName.Left(strFullName.Find('.')); //去除后缀
-
 	if (bExtension)
 		strFinalName = strFullName;
 	else
@@ -377,23 +469,8 @@ _wsplitpath_s(aaa, NULL, 0, NULL, 0, NULL, 0, ExtensionBuf, 128);
 strExtension = ExtensionBuf;
 
 
-static CString NameFromPath(CString& strFullPath, BOOL bExtension)
-{
-	CString strFinalName;
-	if (strFullPath.IsEmpty())
-		return strFinalName;
 
-	strFullPath.Replace(_T("\\"), _T("/"));
-	CString strFullName = strFullPath.Right(strFullPath.GetLength() - strFullPath.ReverseFind('/') - 1); //带后缀的文件名
-	CString strFirstName = strFullName.Left(strFullName.Find('.')); //去除后缀
 
-	if (bExtension)
-		strFinalName = strFullName;
-	else
-		strFinalName = strFirstName;
-
-	return strFinalName;
-}
 
 
 6.一次打开多个文件

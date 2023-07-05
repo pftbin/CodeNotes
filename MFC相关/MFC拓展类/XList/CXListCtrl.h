@@ -18,6 +18,13 @@
 #define DF_LIST_MESSAGE_CLICK_BUTTON		(WM_USER+1000)
 #define DF_LIST_MESSAGE_EDIT_HIDE			(WM_USER+1001)
 
+#define ITEM_SUBITEM_SET(nItem,nSubItem)	(((nItem<<16)&0xFFFF0000)|(nSubItem&0x0000FFFF))
+#define ITEM_GET(Item_SubItem)				((Item_SubItem&0xFFFF0000)>>16)
+#define SUBITEM_GET(Item_SubItem)			((Item_SubItem&0x0000FFFF))					
+
+
+
+
 #define DF_MAX_ROW	100
 #define DF_MAX_COL  100
 #include <vector>
@@ -103,7 +110,7 @@ struct XLISTCTRL_ITEM_DATA
 
 ///////////////////////////////////////////////////////////////////////////////
 // CXListCtrl class
-class CXListCtrl : public CListCtrl
+class CXListCtrl : public CMFCListCtrl
 {
 	DECLARE_DYNCREATE(CXListCtrl)
 
@@ -175,6 +182,9 @@ protected:
 	virtual BOOL CheckEditInfo(int iItem, int iSubItem, LPCTSTR lpszNewText);
 	virtual void UpdateEditInfo(int iItem, int iSubItem, LPCTSTR lpszNewText);
 	virtual void HideAllCtrls();
+
+	//For Sort
+	virtual BOOL SortColumn(int iSubItem, BOOL bAscending);
 
 	BOOL CheckItemIndex(int nItem);
 	BOOL CheckSubItemIndex(int nItem, int nSubItem);
@@ -249,7 +259,8 @@ protected:
 	// Generated message map functions
 protected:
 	//{{AFX_MSG(CXListCtrl)
-	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct);
+	afx_msg int  OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSysColorChange();
 	afx_msg void OnDestroy();
 	afx_msg void OnPaint();
