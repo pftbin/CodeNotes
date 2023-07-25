@@ -11,9 +11,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define IDB_UPARROW                     134//自定义导入资源
-#define IDB_DOWNARROW                   135//自定义导入资源
-
 int  g_SortColumnIndex = 0;
 bool g_SortAscending = false;
 
@@ -71,6 +68,14 @@ CXListCtrl::CXListCtrl()
 // dtor
 CXListCtrl::~CXListCtrl()
 {
+}
+
+BOOL CXListCtrl::CheckColumnIndex(int nColIndex)
+{
+	ASSERT(nColIndex >= 0);
+	ASSERT(nColIndex < GetColumnCount());
+
+	return ((nColIndex >= 0) && (nColIndex < GetColumnCount()));
 }
 
 BOOL CXListCtrl::CheckItemIndex(int nItem)
@@ -1752,6 +1757,33 @@ void CXListCtrl::EnableButton(int nItem, int nSubItem, BOOL bEnable)
 		}
 	}
 }
+/////////////////////////////////////////////////////////////////////////
+BOOL CXListCtrl::IsEnableSortCol(int nColIndex)
+{
+	BOOL bResult = FALSE;
+	if (CheckColumnIndex(nColIndex))
+	{
+		XLISTCTRL_COL_DATA colDataItem;
+		if (m_mapColData.Lookup(nColIndex, colDataItem))
+		{
+			bResult = colDataItem.bSortEnable;
+		}	
+	}
+
+	return bResult;
+}
+
+void CXListCtrl::EnableSortColunm(int nColIndex, BOOL bEnable)
+{
+	if (CheckColumnIndex(nColIndex))
+	{
+		XLISTCTRL_COL_DATA colDataItem;
+		m_mapColData.Lookup(nColIndex, colDataItem);//Copy OldData
+			
+		colDataItem.bSortEnable = bEnable;
+		m_mapColData.SetAt(nColIndex, colDataItem);
+	}
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // UpdateItem
@@ -1867,6 +1899,16 @@ LRESULT CXListCtrl::OnInsertColumn(WPARAM wParam, LPARAM lParam)
 		}
 	}
 
+	if (lResult == 0)
+	{
+		int nColumnIndex = static_cast<int>(wParam);
+
+		XLISTCTRL_COL_DATA* pColData = NULL;
+		pColData = new XLISTCTRL_COL_DATA;
+
+		m_mapColData.SetAt(nColumnIndex, *pColData);
+	}
+
 	return lResult;
 }
 
@@ -1927,7 +1969,7 @@ void CXListCtrl::OnColumnClick(NMHDR* pNMHDR, LRESULT* pResult)
 
 	//点击Header则进行排序
 	int nSubItem = lpNMListView->iSubItem;
-	if (nSubItem != -1)
+	if (nSubItem != -1 && IsEnableSortCol(nSubItem))
 	{
 		if (g_SortColumnIndex == nSubItem)
 		{

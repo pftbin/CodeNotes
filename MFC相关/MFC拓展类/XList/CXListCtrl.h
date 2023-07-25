@@ -30,6 +30,16 @@
 #include <vector>
 ///////////////////////////////////////////////////////////////////////////////
 // CXListCtrl data
+struct XLISTCTRL_COL_DATA
+{
+	XLISTCTRL_COL_DATA()
+	{
+		bSortEnable = FALSE;
+	}
+
+	BOOL bSortEnable;
+};
+
 struct XLISTCTRL_SUBITEM_DATA
 {
 	// ctor
@@ -149,6 +159,9 @@ public:
 	virtual void EnableComboBox(int nItem, int nSubItem, BOOL bEnable);
 	virtual void EnableButton(int nItem, int nSubItem, BOOL bEnable);
 
+	virtual BOOL IsEnableSortCol(int nColIndex);
+	virtual void EnableSortColunm(int nColIndex, BOOL bEnable);
+
 
 	virtual int GetCheckState(int nItem, int nSubItem);
 	virtual BOOL SetCheckState(int nItem, int nSubItem, int nCheckState);
@@ -186,6 +199,7 @@ protected:
 	//For Sort
 	virtual BOOL SortColumn(int iSubItem, BOOL bAscending);
 
+	BOOL CheckColumnIndex(int nColIndex);
 	BOOL CheckItemIndex(int nItem);
 	BOOL CheckSubItemIndex(int nItem, int nSubItem);
 	XLISTCTRL_ITEM_DATA* GetXListCtrlData(int nItem);
@@ -255,6 +269,8 @@ protected:
 	CEdit* m_pEditWnd;
 	CComboBox* m_pComboBoxWnd;
 	CArray<XLISTCTRL_ITEM_DATA*> m_arItemData;
+
+	CMap<int, int, XLISTCTRL_COL_DATA, XLISTCTRL_COL_DATA>	 m_mapColData;
 
 	// Generated message map functions
 protected:

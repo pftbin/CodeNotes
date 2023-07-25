@@ -206,7 +206,7 @@ namespace MFCHttp
 			return FALSE;
 
 		if (::PathFileExists(strFullFilePath))
-			::DeleteFile(strFullFilePath);
+			return TRUE;
 
 		BOOL bResult = FALSE;
 		//解析Url,例如：https://www.cnblogs.com/Zender/p/7596730.html
