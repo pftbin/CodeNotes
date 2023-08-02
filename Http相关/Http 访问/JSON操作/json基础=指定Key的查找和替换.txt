@@ -1,0 +1,279 @@
+static void ReplaceObjectValue(json::Object& json_obj, std::string key, std::string value)
+{
+	json::Object::ValueMap::iterator it = json_obj.begin();
+	for (it; it != json_obj.end(); ++it)
+	{
+		std::string nowkey = it->first;
+		if (it->second.GetType() == json::StringVal)
+		{
+			if (nowkey == key)
+			{
+				json_obj[nowkey] = value;
+				return;
+			}		
+		}
+		if (it->second.GetType() == json::ObjectVal)
+		{
+			json::Object json_subobj = it->second.ToObject();
+			ReplaceObjectValue(json_subobj, key, value);
+			json_obj[nowkey] = json_subobj;
+		}
+		if (it->second.GetType() == json::ArrayVal)
+		{
+			json::Array json_subarray = it->second.ToArray();
+			for (size_t j = 0; j < json_subarray.size(); ++j)
+			{
+				if (json_subarray[j].GetType() == json::ObjectVal)
+				{
+					json::Object json_subarray_obj = json_subarray[j].ToObject();
+					ReplaceObjectValue(json_subarray_obj, key, value);
+					json_subarray[j] = json_subarray_obj;
+				}
+			}
+			json_obj[nowkey] = json_subarray;
+		}
+	}
+}
+static void ReplaceObjectValue(json::Object& json_obj, std::string key, int value)
+{
+	json::Object::ValueMap::iterator it = json_obj.begin();
+	for (it; it != json_obj.end(); ++it)
+	{
+		std::string nowkey = it->first;
+		if (it->second.GetType() == json::IntVal)
+		{
+			if (nowkey == key)
+			{
+				json_obj[nowkey] = value;
+				return;
+			}
+		}
+		if (it->second.GetType() == json::ObjectVal)
+		{
+			json::Object json_subobj = it->second.ToObject();
+			ReplaceObjectValue(json_subobj, key, value);
+			json_obj[nowkey] = json_subobj;
+		}
+		if (it->second.GetType() == json::ArrayVal)
+		{
+			json::Array json_subarray = it->second.ToArray();
+			for (size_t j = 0; j < json_subarray.size(); ++j)
+			{
+				if (json_subarray[j].GetType() == json::ObjectVal)
+				{
+					json::Object json_subarray_obj = json_subarray[j].ToObject();
+					ReplaceObjectValue(json_subarray_obj, key, value);
+					json_subarray[j] = json_subarray_obj;
+				}
+			}
+			json_obj[nowkey] = json_subarray;
+		}
+	}
+}
+static void ReplaceObjectValue(json::Object& json_obj, std::string key, double value)
+{
+	json::Object::ValueMap::iterator it = json_obj.begin();
+	for (it; it != json_obj.end(); ++it)
+	{
+		std::string nowkey = it->first;
+		if (it->second.GetType() == json::DoubleVal)
+		{
+			if (nowkey == key)
+			{
+				json_obj[nowkey] = value;
+				return;
+			}
+		}
+		if (it->second.GetType() == json::ObjectVal)
+		{
+			json::Object json_subobj = it->second.ToObject();
+			ReplaceObjectValue(json_subobj, key, value);
+			json_obj[nowkey] = json_subobj;
+		}
+		if (it->second.GetType() == json::ArrayVal)
+		{
+			json::Array json_subarray = it->second.ToArray();
+			for (size_t j = 0; j < json_subarray.size(); ++j)
+			{
+				if (json_subarray[j].GetType() == json::ObjectVal)
+				{
+					json::Object json_subarray_obj = json_subarray[j].ToObject();
+					ReplaceObjectValue(json_subarray_obj, key, value);
+					json_subarray[j] = json_subarray_obj;
+				}
+			}
+			json_obj[nowkey] = json_subarray;
+		}
+	}
+}
+static void ReplaceObjectValue(json::Object& json_obj, std::string key, float value)
+{
+	json::Object::ValueMap::iterator it = json_obj.begin();
+	for (it; it != json_obj.end(); ++it)
+	{
+		std::string nowkey = it->first;
+		if (it->second.GetType() == json::FloatVal)
+		{
+			if (nowkey == key)
+			{
+				json_obj[nowkey] = value;
+				return;
+			}
+		}
+		if (it->second.GetType() == json::ObjectVal)
+		{
+			json::Object json_subobj = it->second.ToObject();
+			ReplaceObjectValue(json_subobj, key, value);
+			json_obj[nowkey] = json_subobj;
+		}
+		if (it->second.GetType() == json::ArrayVal)
+		{
+			json::Array json_subarray = it->second.ToArray();
+			for (size_t j = 0; j < json_subarray.size(); ++j)
+			{
+				if (json_subarray[j].GetType() == json::ObjectVal)
+				{
+					json::Object json_subarray_obj = json_subarray[j].ToObject();
+					ReplaceObjectValue(json_subarray_obj, key, value);
+					json_subarray[j] = json_subarray_obj;
+				}
+			}
+			json_obj[nowkey] = json_subarray;
+		}
+	}
+}
+static void ParseObject(json::Object json_obj, std::map<std::string, std::string>& mapStrParameter, std::map<std::string, int>& mapIntParameter, std::map<std::string, double>& mapDoubleParameter)
+{
+	json::Object::ValueMap::iterator it = json_obj.begin();
+	for (it; it != json_obj.end(); ++it)
+	{
+		std::string key = it->first;
+		if (it->second.GetType() == json::StringVal)
+		{
+			std::string value = it->second.ToString();
+			mapStrParameter[key] = value;
+		}
+		if (it->second.GetType() == json::IntVal)
+		{
+			int value = it->second.ToInt();
+			mapIntParameter[key] = value;
+		}
+		if (it->second.GetType() == json::DoubleVal)
+		{
+			double value = it->second.ToDouble();
+			mapDoubleParameter[key] = value;
+		}
+		if (it->second.GetType() == json::ObjectVal)
+		{
+			json::Object json_subobj = it->second.ToObject();
+			ParseObject(json_subobj, mapStrParameter, mapIntParameter, mapDoubleParameter);
+		}
+		if (it->second.GetType() == json::ArrayVal)
+		{
+			json::Array json_subarray = it->second.ToArray();
+			for (size_t j = 0; j < json_subarray.size(); ++j)
+			{
+				if (json_subarray[j].GetType() == json::ObjectVal)
+				{
+					json::Object json_subarray_obj = json_subarray[j].ToObject();
+					ParseObject(json_subarray_obj, mapStrParameter, mapIntParameter, mapDoubleParameter);
+				}
+			}
+		}
+	}
+}
+static BOOL ParseString(std::string str_json, std::map<std::string, std::string>& mapStrParameter, std::map<std::string, int>& mapIntParameter, std::map<std::string, double>& mapDoubleParameter)
+{
+	json::Value json_data = json::Deserialize(str_json);
+	if (json_data.GetType() == json::ObjectVal)
+	{
+		json::Object json_obj = json_data.ToObject();
+		ParseObject(json_obj, mapStrParameter, mapIntParameter, mapDoubleParameter);
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+static CString GetMsgNodeValue(CString strTaskMsg, CString strNodeName, int nMsgType = 1)
+{
+	CString strLogInfo;
+	CString strItemValue = _T("");
+	if (nMsgType == 0)
+	{
+		strTaskMsg.Trim();
+		CString strNodeStart; strNodeStart.Format(_T("<%s>"), strNodeName);
+		CString strNodeEnd; strNodeEnd.Format(_T("</%s>"), strNodeName);
+		int nPos0 = strTaskMsg.Find(strNodeStart);
+		int nPos1 = strTaskMsg.Find(strNodeEnd);
+		if (nPos0 != -1 && nPos1 != -1 && nPos1 > nPos0)
+		{
+			int nOffset = strNodeName.GetLength();
+			strItemValue = strTaskMsg.Mid(nPos0 + nOffset + 2, nPos1 - nPos0 - nOffset - 2);
+		}
+	}
+	else
+	{
+		std::string str_json = (CT2A)strTaskMsg;
+		std::string str_key = (CT2A)strNodeName;
+
+		std::map<std::string, std::string> mapStrParameter;
+		std::map<std::string, int>		   mapIntParameter;
+		std::map<std::string, double>	   mapDoubleParameter;
+		ParseString(str_json, mapStrParameter, mapIntParameter, mapDoubleParameter);
+
+		std::map<std::string, std::string>::iterator it_str = mapStrParameter.find(str_key);
+		if (it_str != mapStrParameter.end())
+			strItemValue = (it_str->second).c_str();
+		std::map<std::string, int>::iterator it_int = mapIntParameter.find(str_key);
+		if (it_int != mapIntParameter.end())
+			strItemValue.Format(_T("%d"), (it_int->second));
+		std::map<std::string, double>::iterator it_double = mapDoubleParameter.find(str_key);
+		if (it_double != mapDoubleParameter.end())
+			strItemValue.Format(_T("%.1f"), (it_double->second));
+	}
+
+	return strItemValue;
+}
+static BOOL SetMsgNodeValue(CString& strTaskMsg, CString strNodeName, CString strNodeValue, int nMsgType = 1)
+{
+	BOOL bResult = FALSE;
+	CString strOldValue = _T("");
+	if (nMsgType == 0)
+	{
+		strTaskMsg.Trim();
+		CString strNodeStart; strNodeStart.Format(_T("<%s>"), strNodeName);
+		CString strNodeEnd; strNodeEnd.Format(_T("</%s>"), strNodeName);
+		int nPos0 = strTaskMsg.Find(strNodeStart);
+		int nPos1 = strTaskMsg.Find(strNodeEnd);
+		if (nPos0 != -1 && nPos1 != -1 && nPos1 > nPos0)
+		{
+			int nOffset = strNodeName.GetLength();
+			strOldValue = strTaskMsg.Mid(nPos0 + nOffset + 2, nPos1 - nPos0 - nOffset - 2);
+
+			bResult = TRUE;
+			CString strOldKeyValue = strNodeStart + strOldValue + strNodeEnd;
+			CString strNewKeyValue = strNodeStart + strNodeValue + strNodeEnd;
+			strTaskMsg.Replace(strOldKeyValue, strNewKeyValue);
+		}
+	}
+	else
+	{
+		std::string str_json = (CT2A)strTaskMsg;
+		std::string str_key = (CT2A)strNodeName;
+		std::string str_value = (CT2A)strNodeValue;
+		
+
+		json::Value json_data = json::Deserialize(str_json);
+		if (json_data.GetType() == json::ObjectVal)
+		{
+			bResult = TRUE;
+			json::Object json_obj = json_data.ToObject();
+			ReplaceObjectValue(json_obj, str_key, str_value);
+			str_json = json::Serialize(json::Value(json_obj));
+			strTaskMsg = str_json.c_str();
+		}	
+	}
+
+	return bResult;
+}
