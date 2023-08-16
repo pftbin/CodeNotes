@@ -468,7 +468,25 @@ CString strExtension; TCHAR ExtensionBuf[128] = { 0 };
 _wsplitpath_s(aaa, NULL, 0, NULL, 0, NULL, 0, ExtensionBuf, 128);
 strExtension = ExtensionBuf;
 
+//
+static CString FormatFromPath(CString& strFullPath, BOOL bPoint = TRUE)
+{
+	CString strFinalFormat;
+	if (strFullPath.IsEmpty())
+		return strFinalFormat;
 
+	strFullPath.Replace(_T("\\"), _T("/"));
+	CString strFullName = strFullPath.Right(strFullPath.GetLength() - strFullPath.ReverseFind('/') - 1); //带后缀的文件名
+
+	CString strFullFormat = strFullName.Right(strFullName.GetLength() - strFullName.ReverseFind('.')); //带点前缀
+	CString strFormat = strFullName.Right(strFullName.GetLength() - strFullName.ReverseFind('.') - 1); //不带点前缀
+	if (bPoint)
+		strFinalFormat = strFullFormat;
+	else
+		strFinalFormat = strFormat;
+
+	return strFinalFormat;
+}
 
 
 
