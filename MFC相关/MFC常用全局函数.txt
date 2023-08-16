@@ -1,0 +1,120 @@
+static CString GetAppFolder(void)
+{
+	TCHAR exeFullName[MAX_PATH];
+	::GetModuleFileName(AfxGetInstanceHandle(), exeFullName, MAX_PATH);
+	CString mPath = exeFullName;
+
+	int mPos = mPath.ReverseFind('\\');
+
+	if (mPos == -1)return CString(_T(""));	//没有发现
+
+	mPath = mPath.Left(mPos);
+
+	if (mPath.Right(1) == _T("\\"))
+	{
+		mPath = mPath.Left(mPos - 1);
+	}
+
+	return mPath;
+}
+static CString NameFromPath(CString& strFullPath, BOOL bExtension = TRUE)
+{
+	CString strFinalName;
+	if (strFullPath.IsEmpty())
+		return strFinalName;
+
+	strFullPath.Replace(_T("\\"), _T("/"));
+	CString strFullName = strFullPath.Right(strFullPath.GetLength() - strFullPath.ReverseFind('/') - 1); //带后缀的文件名
+	CString strFirstName = strFullName.Left(strFullName.Find('.')); //去除后缀
+	if (bExtension)
+		strFinalName = strFullName;
+	else
+		strFinalName = strFirstName;
+
+	return strFinalName;
+}
+static CString FolderFromPath(CString& strFullPath)
+{
+	CString strFolder = _T("");
+	int nPos = strFullPath.ReverseFind('/');
+	if (nPos == -1)
+		return strFolder;
+	strFolder = strFullPath.Left(nPos);//获取文件夹
+
+	return strFolder;
+}
+static CString GetLocalIP()
+{
+	CString localIP;
+
+	WSADATA wsaData;
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+	{
+		return localIP;
+	}
+
+	PIP_ADAPTER_INFO pAdapterInfo;
+	PIP_ADAPTER_INFO pAdapter = NULL;
+	ULONG ulOutBufLen = sizeof(IP_ADAPTER_INFO);
+	pAdapterInfo = (IP_ADAPTER_INFO*)malloc(sizeof(IP_ADAPTER_INFO));
+	if (pAdapterInfo == NULL)
+	{
+		return localIP;
+	}
+
+	if (GetAdaptersInfo(pAdapterInfo, &ulOutBufLen) == ERROR_BUFFER_OVERFLOW)
+	{
+		free(pAdapterInfo);
+		pAdapterInfo = (IP_ADAPTER_INFO*)malloc(ulOutBufLen);
+		if (pAdapterInfo == NULL)
+		{
+			return localIP;
+		}
+	}
+
+	if (GetAdaptersInfo(pAdapterInfo, &ulOutBufLen) == NO_ERROR)
+	{
+		pAdapter = pAdapterInfo;
+		while (pAdapter)
+		{
+			if (pAdapter->Type == MIB_IF_TYPE_ETHERNET && pAdapter->AddressLength == 6)
+			{
+				CString strAddress;
+				for (UINT i = 0; i < pAdapter->AddressLength; i++)
+				{
+					CString strByte;
+					strByte.Format(_T("%02X"), pAdapter->Address[i]);
+					strAddress += strByte;
+					if (i < pAdapter->AddressLength - 1)
+					{
+						strAddress += _T(":");
+					}
+				}
+
+				if (strAddress.CompareNoCase(_T("00:00:00:00:00:00")) != 0)
+				{
+					localIP = pAdapter->IpAddressList.IpAddress.String;
+					break;
+				}
+			}
+
+			pAdapter = pAdapter->Next;
+		}
+	}
+
+	free(pAdapterInfo);
+	WSACleanup();
+
+	return localIP;
+}
+static ULONGLONG GetLocalFreeSpace(LPCTSTR lpDirectoryPath)
+{
+	ULARGE_INTEGER freeBytesAvailable, totalNumberOfBytes, totalNumberOfFreeBytes;
+	if (GetDiskFreeSpaceEx(lpDirectoryPath, &freeBytesAvailable, &totalNumberOfBytes, &totalNumberOfFreeBytes))
+	{
+		ULONGLONG freeSpaceInMB = (freeBytesAvailable.QuadPart / (1024 * 1024));
+		return freeSpaceInMB;
+	}
+
+	return 0xFFFF;//获取失败
+}
