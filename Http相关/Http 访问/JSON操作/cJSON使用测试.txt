@@ -85,6 +85,10 @@ int main(void)
 //序列化/反序列化=================================================================================
     char* str = cJSON_Print(cjson_root);
     cJSON* pObject = cJSON_Parse(str);
+	
+//释放内存=================================================================================
+	cJSON_Delete(cjson_root);
+	cJSON_Delete(pObject);
 
     return 0;
 }
