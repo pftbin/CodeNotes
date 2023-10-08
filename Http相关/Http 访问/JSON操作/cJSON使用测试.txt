@@ -1,0 +1,90 @@
+#include <stdio.h>
+#include "cJSON.h"
+int main(void)
+{
+
+//增=================================================================================
+    cJSON* cjson_root = NULL;
+    cjson_root = cJSON_CreateObject();//根JSON数据对象
+    //添加键值对
+    cJSON_AddStringToObject(cjson_root, "name", "mculover666");
+    cJSON_AddNumberToObject(cjson_root, "age", 22);
+    cJSON_AddNumberToObject(cjson_root, "weight", 55.5);
+    cJSON_AddBoolToObject(cjson_root, "isgirl", 0);//0=false,1=true
+    //添加对象
+    cJSON* cjson_address = cJSON_CreateObject();
+    cJSON_AddStringToObject(cjson_address, "country", "China\\chengdu\\gaoxin");
+    cJSON_AddNumberToObject(cjson_address, "zip-code", 111111);
+    cJSON_AddItemToObject(cjson_root, "address", cjson_address);
+    //添加数组
+    cJSON* cjson_skill = cJSON_CreateArray();
+    cJSON_AddItemToArray(cjson_skill, cJSON_CreateString("C++"));
+    cJSON_AddItemToArray(cjson_skill, cJSON_CreateString("Java"));
+    cJSON_AddItemToArray(cjson_skill, cJSON_CreateString("Python"));
+    cJSON_InsertItemInArray(cjson_skill, 0, cJSON_CreateString("C"));//指定位置插入
+    cJSON_ReplaceItemInArray(cjson_skill, 1, cJSON_CreateString("PHP"));//指定位置替换
+    cJSON_AddItemToObject(cjson_root, "skill", cjson_skill);
+    //打印
+    printf("json_root[增] = %s\n\n", cJSON_Print(cjson_root));
+
+
+//查=================================================================================
+    //一般值
+    cJSON* pName = cJSON_GetObjectItem(cjson_root, "name");
+    if (pName->type == cJSON_String)
+    {
+        printf("name = %s\n", cJSON_Print(pName));
+    }
+    //对象
+    cJSON* pAddress = cJSON_GetObjectItem(cjson_root, "address");
+    if (pAddress->type == cJSON_Object)
+    {
+        printf("Address = %s\n", cJSON_Print(pAddress));
+    }
+    //数组
+    cJSON* pSkill= cJSON_GetObjectItem(cjson_root, "skill");
+    if (pSkill->type == cJSON_Array)
+    {
+        printf("Skill = %s\n", cJSON_Print(pSkill));
+        for (int i = 0; i < cJSON_GetArraySize(pSkill); i++)
+        {
+            cJSON* pArrayItem = cJSON_GetArrayItem(pSkill, i);
+            printf("Skill[%d] = %s\n", i, cJSON_Print(pArrayItem));
+        }
+    }
+    printf("json_root[查] = %s\n\n", cJSON_Print(cjson_root));
+
+//改=================================================================================
+    //一般值
+    cJSON_ReplaceItemInObject(cjson_root, "name", cJSON_CreateString("mculover777"));
+    //对象
+    cJSON* cjson_newweight = cJSON_CreateObject();
+    cJSON_AddStringToObject(cjson_newweight, "key", "value");
+    cJSON_ReplaceItemInObject(cjson_root, "weight", cjson_newweight);//指定节点改为对象
+    //数组
+    cJSON* cjson_newskill = cJSON_CreateArray();
+    cJSON_AddItemToArray(cjson_newskill, cJSON_CreateString("html"));
+    cJSON_AddItemToArray(cjson_newskill, cJSON_CreateString("js"));
+    cJSON_AddItemToArray(cjson_newskill, cJSON_CreateString("cmd"));
+    cJSON_ReplaceItemInObject(cjson_root, "skill", cjson_newskill);
+    //打印
+    printf("json_root[改] = %s\n\n", cJSON_Print(cjson_root));
+    
+
+ //删=================================================================================
+    //一般值
+    cJSON_DeleteItemFromObject(cjson_root, "isgirl");
+    //对象
+    cJSON_DeleteItemFromObject(cjson_root, "address");
+    //数组
+    cJSON_DetachItemFromArray(cjson_newskill, cJSON_GetArraySize(cjson_newskill)-1);
+
+    //打印
+    printf("json_root[删] = %s\n\n", cJSON_Print(cjson_root));
+
+//序列化/反序列化=================================================================================
+    char* str = cJSON_Print(cjson_root);
+    cJSON* pObject = cJSON_Parse(str);
+
+    return 0;
+}
