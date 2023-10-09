@@ -1,0 +1,101 @@
+###CMake下载地址
+https://cmake.org/download/
+
+###CMake的基本语法
+CMake的配置文件是CMakeLists.txt，语法类似于编程语言，由指令和参数组成。
+每个指令都以小写字母开头，参数可以用空格或分号隔开。以下是一些常用的CMake指令：
+
+==通用语法==
+#PROJECT_SOURCE_DIR 	表示makefile所在目录,即项目所在目录
+#CMAKE_BINARY_DIR		表示构建时的生成目录
+
+#设置变量的值。
+set(SRC_FILES main.cpp)
+
+#指定编译器
+set(CMAKE_C_COMPILER gcc)
+set(CMAKE_CXX_COMPILER g++)
+
+
+
+
+
+==项目相关==
+指定项目名称和版本号。
+project(MyProject VERSION 1.0)
+
+=====================
+#指定exe输出目录
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+
+#指定生成exe的源文件（即项目包含哪些cpp文件）
+add_executable(MyProject 
+main.cpp
+...
+)
+
+=====================
+#指定lib库文件输出目录
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
+
+#指定生成lib库的源文件【多项目使用】
+add_library(MyLibrary STATIC 
+	my_library.cpp
+	...
+)
+
+=====================
+# 设置DLL文件的输出目录
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# 添加一个动态链接库
+add_library(MyLibrary SHARED 
+	my_library.cpp
+	...
+)
+
+=====================【拷贝运行所需文件】
+# 设置源文件夹路径和目标文件夹路径
+set(SOURCE_FOLDER ${PROJECT_SOURCE_DIR}/file)
+set(TARGET_FOLDER ${CMAKE_BINARY_DIR}/bin)
+
+# 获取源文件夹中的所有文件
+file(GLOB FILES_TO_COPY ${SOURCE_FOLDER}/*)
+
+# 遍历所有文件，并将其复制到目标文件夹
+foreach(FILE ${FILES_TO_COPY})
+  file(COPY ${FILE} DESTINATION ${TARGET_FOLDER})
+endforeach()
+
+
+
+
+
+
+=====================
+指定头文件路径
+include_directories(
+    ${PROJECT_SOURCE_DIR}/inc  		
+	...
+)
+
+
+指定库文件路径
+link_directories(
+    ${PROJECT_SOURCE_DIR}/lib
+	...
+)
+
+
+加入要链接的库文件
+target_link_libraries(MyProject
+	MyLib.lib
+	...
+)
+=====================
+
+
+
+
