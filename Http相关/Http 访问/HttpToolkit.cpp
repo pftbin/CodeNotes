@@ -4,9 +4,7 @@
 
 namespace http_toolkit
 {
-
 	//////////////////////////////////////////////////////////////////////////
-	/* DataBlock  */
 	DataBlock::DataBlock(int nBufferSize)
 	{
 		nBufSize = nBufferSize;
@@ -21,9 +19,8 @@ namespace http_toolkit
 		nBufSize = 0;
 		nPos = 0;
 	}
+	
 	//////////////////////////////////////////////////////////////////////////
-
-
 	void UTF8ToUnicode(char* pUTF8Src, WCHAR** ppUnicodeDst)
 	{
 
@@ -153,64 +150,33 @@ namespace http_toolkit
 
 		return dwWrittenSize;
 	}
-
-	BOOL SendAndRecv(LPCSTR lpRequestUTF8Encoded, DataBlock &headerData, DataBlock &bodyData)
+	
+	//////////////////////////////////////////////////////////////////////////
+	//GET
+	BOOL SendAndRecvWithHeaderBody(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount, LPCSTR lpBodyData)
 	{
 		CURL *curl_handle;
 		curl_global_init(CURL_GLOBAL_ALL);
 
 		/* init the curl session */
 		curl_handle = curl_easy_init();
-
-//		curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT,3);   
-
-		/* set URL to get */
-		curl_easy_setopt(curl_handle, CURLOPT_URL, lpRequestUTF8Encoded);
-
-		/* no progress meter please */
-		curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
-
-		/* send all data to this function  */
-		curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data_to_buf);
-
-
-		/* we want the headers be written to this file handle */
-		curl_easy_setopt(curl_handle,   CURLOPT_WRITEHEADER, &headerData);
-
-		/* we want the body be written to this file handle instead of stdout */
-		curl_easy_setopt(curl_handle,   CURLOPT_WRITEDATA, &bodyData);
-
-		/* get it! */
-		curl_easy_perform(curl_handle);
-
-		/* cleanup curl stuff */
-		curl_easy_cleanup(curl_handle);
-
-		return TRUE;
-	}
-
-	BOOL SendAndRecvWithHeader(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount)
-	{
 		
-		CURL *curl_handle;
-		curl_global_init(CURL_GLOBAL_ALL);
-
-		/* init the curl session */
-		curl_handle = curl_easy_init();
-
-//		curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT,3);   
+		//curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT,3);  
 
 		/* set URL to get */
 		curl_easy_setopt(curl_handle, CURLOPT_URL, lpRequestUTF8Encoded);
 
+		//header
 		curl_slist *plist = curl_slist_append(NULL,lpHeader[0]);
-
 		for(int i=1;i<nHeaderCount;i++)
 		{
 			curl_slist_append(plist,lpHeader[i]);
 		}
-
 		curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, plist);
+		
+		//body
+		if(strlen(lpData)>0)
+			curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, lpBodyData);
 
 		/* no progress meter please */
 		curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);		
@@ -247,88 +213,32 @@ namespace http_toolkit
 		return TRUE;
 	}
 
-	BOOL PostAndRecvWithHeaderNew(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount)
+	//POST
+	BOOL PostAndRecvWithHeaderBody(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount, LPCSTR lpBodyData)
 	{
 		CURL *curl_handle;
 		curl_global_init(CURL_GLOBAL_ALL);
 
 		/* init the curl session */
 		curl_handle = curl_easy_init();
-
-		//		curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT,3);   
-
-
-		curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "POST");
-
-
-		/* set URL to get */
-		curl_easy_setopt(curl_handle, CURLOPT_URL, lpRequestUTF8Encoded);
-
-		curl_slist *plist = curl_slist_append(NULL,lpHeader[0]);
-
-		for(int i=1;i<nHeaderCount;i++)
-		{
-			curl_slist_append(plist,lpHeader[i]);
-		}
-
-		curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, plist);
-
-		/* no progress meter please */
-		curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);		
-
-		/* send all data to this function  */
-		curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data_to_buf);
-
-
-		///* we want the headers be written to this file handle */
-		curl_easy_setopt(curl_handle,   CURLOPT_WRITEHEADER, &headerData);
-
-		///* we want the body be written to this file handle instead of stdout */
-		curl_easy_setopt(curl_handle,   CURLOPT_WRITEDATA, &bodyData);
-
-		/* get it! */
-		CURLcode res = curl_easy_perform(curl_handle);
-
-		BOOL bRet = FALSE;
-		if(res == CURLE_OK)
-		{
-			bRet = TRUE;
-		}
-
-		curl_slist_free_all(plist);
-
-		/* cleanup curl stuff */
-		curl_easy_cleanup(curl_handle);
-
-		return bRet;
-	}
-
-	BOOL PostAndRecvWithHeader(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount,LPCSTR lpData)
-	{
-		CURL *curl_handle;
-		curl_global_init(CURL_GLOBAL_ALL);
-
-		/* init the curl session */
-		curl_handle = curl_easy_init();
-
+		
 		//curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT,3);   
-
-
 		curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "POST");
-		curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, lpData);
-
-
+		
 		/* set URL to get */
 		curl_easy_setopt(curl_handle, CURLOPT_URL, lpRequestUTF8Encoded);
 
+		//header
 		curl_slist *plist = curl_slist_append(NULL,lpHeader[0]);
-
 		for(int i=1;i<nHeaderCount;i++)
 		{
 			curl_slist_append(plist,lpHeader[i]);
 		}
-
 		curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, plist);
+		
+		//body
+		if(strlen(lpData)>0)
+			curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, lpBodyData);
 
 		/* no progress meter please */
 		curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);		
@@ -369,7 +279,8 @@ namespace http_toolkit
 		return bRet;
 	}
 
-	BOOL DeleteAndRecvWithHeader(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount,LPCSTR lpData)
+	//DELETE
+	BOOL DeleteAndRecvWithHeaderBody(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount, LPCSTR lpBodyData)
 	{
 		CURL *curl_handle;
 		curl_global_init(CURL_GLOBAL_ALL);
@@ -377,148 +288,79 @@ namespace http_toolkit
 		/* init the curl session */
 		curl_handle = curl_easy_init();
 
-		//		curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT,3);   
-
-
-
+		//curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT,3);   
 		curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "DELETE");
-		if(strlen(lpData)>0)
-			curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, lpData);
-
-
-
-		/* set URL to get */
-		curl_easy_setopt(curl_handle, CURLOPT_URL, lpRequestUTF8Encoded);
-
-		curl_slist *plist = curl_slist_append(NULL,lpHeader[0]);
-
-		for(int i=1;i<nHeaderCount;i++)
-		{
-			curl_slist_append(plist,lpHeader[i]);
-		}
-
-		curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, plist);
-
-		/* no progress meter please */
-		curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);		
-
-		/* send all data to this function  */
-		curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data_to_buf);
-
-
-		///* we want the headers be written to this file handle */
-		curl_easy_setopt(curl_handle,   CURLOPT_WRITEHEADER, &headerData);
-
-		///* we want the body be written to this file handle instead of stdout */
-		curl_easy_setopt(curl_handle,   CURLOPT_WRITEDATA, &bodyData);
-
-		/* get it! */
-		CURLcode res = curl_easy_perform(curl_handle);
-		BOOL bRet = FALSE;
-		if(res == CURLE_OK)
-		{
-			bRet = TRUE;
-		}
-
-		curl_slist_free_all(plist);
-
-		/* cleanup curl stuff */
-		curl_easy_cleanup(curl_handle);
-
-		return bRet;
-	}
-
-	BOOL PutAndRecvWithHeader(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount,LPCSTR lpData)
-	{
-		CURL *curl_handle;
-		curl_global_init(CURL_GLOBAL_ALL);
-
-		/* init the curl session */
-		curl_handle = curl_easy_init();
-
-		//		curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT,3);   
-
-
-
-		curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "PUT");
-		curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, lpData);
-
-
-
-		/* set URL to get */
-		curl_easy_setopt(curl_handle, CURLOPT_URL, lpRequestUTF8Encoded);
-
-		curl_slist *plist = curl_slist_append(NULL,lpHeader[0]);
-
-		for(int i=1;i<nHeaderCount;i++)
-		{
-			curl_slist_append(plist,lpHeader[i]);
-		}
-
-		curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, plist);
-
-		/* no progress meter please */
-		curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);		
-
-		/* send all data to this function  */
-		curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data_to_buf);
-
-
-		///* we want the headers be written to this file handle */
-		curl_easy_setopt(curl_handle,   CURLOPT_WRITEHEADER, &headerData);
-
-		///* we want the body be written to this file handle instead of stdout */
-		curl_easy_setopt(curl_handle,   CURLOPT_WRITEDATA, &bodyData);
-
-		/* get it! */
-		CURLcode res = curl_easy_perform(curl_handle);
-		BOOL bRet = FALSE;
-		if(res == CURLE_OK)
-			bRet = TRUE;
-
-		curl_slist_free_all(plist);
-
-		/* cleanup curl stuff */
-		curl_easy_cleanup(curl_handle);
-
-		return bRet;
-	}
-
-	BOOL PostAndRecv(LPCSTR lpRequestUTF8Encoded, DataBlock &headerData, DataBlock &bodyData,LPCSTR lpData)
-	{
-		CURL *curl_handle;
-		curl_global_init(CURL_GLOBAL_ALL);
-
-		/* init the curl session */
-		curl_handle = curl_easy_init();
-
-		//		curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT,3);   
-
-
-		CString str3=_T("Content-Type:application/json;charset=utf-8");
-		char* pUTF8Header(NULL);
-		UnicodeToUTF8((LPCWSTR)str3, &pUTF8Header);
-		curl_slist *plist = curl_slist_append(NULL,pUTF8Header);
-		curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, plist);
-
-
-		curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "POST");
-		curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, lpData);
-
-//		curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "POST");
-//		curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, lpData);
-//		curl_easy_setopt(curl_handle,CURLOPT_POST,1);
-		curl_easy_setopt(curl_handle, CURLOPT_POST, 1);
- 		curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1);
- 		curl_easy_setopt(curl_handle, CURLOPT_HEADER, 1);
- 		curl_easy_setopt(curl_handle, CURLOPT_COOKIEFILE, "/Users/zhu/CProjects/curlposttest.cookie");
 		
-		curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
-
-
 		/* set URL to get */
 		curl_easy_setopt(curl_handle, CURLOPT_URL, lpRequestUTF8Encoded);
 
+		//header
+		curl_slist *plist = curl_slist_append(NULL,lpHeader[0]);
+		for(int i=1;i<nHeaderCount;i++)
+		{
+			curl_slist_append(plist,lpHeader[i]);
+		}
+		curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, plist);
+		
+		//body
+		if(strlen(lpData)>0)
+			curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, lpBodyData);
+
+		/* no progress meter please */
+		curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);		
+
+		/* send all data to this function  */
+		curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data_to_buf);
+
+
+		///* we want the headers be written to this file handle */
+		curl_easy_setopt(curl_handle,   CURLOPT_WRITEHEADER, &headerData);
+
+		///* we want the body be written to this file handle instead of stdout */
+		curl_easy_setopt(curl_handle,   CURLOPT_WRITEDATA, &bodyData);
+
+		/* get it! */
+		CURLcode res = curl_easy_perform(curl_handle);
+		BOOL bRet = FALSE;
+		if(res == CURLE_OK)
+		{
+			bRet = TRUE;
+		}
+
+		curl_slist_free_all(plist);
+
+		/* cleanup curl stuff */
+		curl_easy_cleanup(curl_handle);
+
+		return bRet;
+	}
+
+	//PUT
+	BOOL PutAndRecvWithHeaderBody(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount, LPCSTR lpBodyData)
+	{
+		CURL *curl_handle;
+		curl_global_init(CURL_GLOBAL_ALL);
+
+		/* init the curl session */
+		curl_handle = curl_easy_init();
+
+		//curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT,3);   
+		curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "PUT");
+		
+		/* set URL to get */
+		curl_easy_setopt(curl_handle, CURLOPT_URL, lpRequestUTF8Encoded);
+
+		//header
+		curl_slist *plist = curl_slist_append(NULL,lpHeader[0]);
+		for(int i=1;i<nHeaderCount;i++)
+		{
+			curl_slist_append(plist,lpHeader[i]);
+		}
+		curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, plist);
+		
+		//body
+		if(strlen(lpData)>0)
+			curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, lpBodyData);
 
 		/* no progress meter please */
 		curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);		
@@ -539,6 +381,7 @@ namespace http_toolkit
 		if(res == CURLE_OK)
 			bRet = TRUE;
 
+		curl_slist_free_all(plist);
 
 		/* cleanup curl stuff */
 		curl_easy_cleanup(curl_handle);
@@ -546,7 +389,8 @@ namespace http_toolkit
 		return bRet;
 	}
 
-	BOOL DownloadFile(LPCSTR lpRequestUTF8Encoded, LPCTSTR lpStorePath, CString &strFileName,BOOL bReplace)
+	//GET-from data
+	BOOL DownloadFile(LPCSTR lpRequestUTF8Encoded, LPCTSTR lpStorePath, CString &strFileName, BOOL bReplace)
 	{
 		CURL *curl_handle;
 		curl_global_init(CURL_GLOBAL_ALL);

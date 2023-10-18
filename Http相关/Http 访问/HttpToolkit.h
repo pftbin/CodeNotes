@@ -3,7 +3,6 @@
 
 namespace http_toolkit
 {
-
 	struct DataBlock
 	{
 		DataBlock(int nBufferSize = 1024 * 1000);
@@ -13,19 +12,24 @@ namespace http_toolkit
 		int nBufSize;
 		int nPos;
 	};
-
-	BOOL SendAndRecv(LPCSTR lpRequestUTF8Encoded, DataBlock &headerData, DataBlock &bodyData);
-	BOOL SendAndRecvWithHeader(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount);
-	BOOL DownloadFile(LPCSTR lpRequestUTF8Encoded,  LPCTSTR lpStorePath,CString &strFileName,BOOL bReplace = FALSE);
-	BOOL PutAndRecvWithHeader(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount,LPCSTR lpData);
-	BOOL PostAndRecv(LPCSTR lpRequestUTF8Encoded, DataBlock &headerData, DataBlock &bodyData,LPCSTR lpData);
-	BOOL PostAndRecvWithHeader(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount,LPCSTR lpData);
-	BOOL PostAndRecvWithHeaderNew(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount);
-
-	BOOL DeleteAndRecvWithHeader(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount,LPCSTR lpData);
-
+	
 	void UTF8ToUnicode(char* pUTF8Src, WCHAR** ppUnicodeDst);
 	void UnicodeToUTF8(const WCHAR *pUnicodeSrc, char** ppUTF8Dst);
 	void URLEncode(char* szIn, char** pOut);
+	
+	//GET
+	BOOL SendAndRecvWithHeaderBody(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount, LPCSTR lpBodyData);
+	
+	//POST
+	BOOL PostAndRecvWithHeaderBody(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount, LPCSTR lpBodyData);
+	
+	//DELETE
+	BOOL DeleteAndRecvWithHeaderBody(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount, LPCSTR lpBodyData);
+	
+	//PUT
+	BOOL PutAndRecvWithHeaderBody(LPCSTR lpRequestUTF8Encoded,LPCSTR lpHeader[],DataBlock &headerData, DataBlock &bodyData,int nHeaderCount, LPCSTR lpBodyData);
+	
+	//GET-from data
+	BOOL DownloadFile(LPCSTR lpRequestUTF8Encoded, LPCTSTR lpStorePath, CString &strFileName, BOOL bReplace);
 };
 
