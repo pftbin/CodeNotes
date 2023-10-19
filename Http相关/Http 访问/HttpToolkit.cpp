@@ -2,6 +2,69 @@
 #include "HttpToolkit.h"
 #include <io.h>
 
+/*
+	使用实例：
+	1.GET-POST等使用类似,示例是POST
+	
+	//URL
+	CString strHOST = g_HOST;
+	CString strPATH = g_PATHGetItemDataList;
+	CString strDesURL; strDesURL.Format(_T("%s%s"),strHOST,strPATH);
+
+	char* pUTF8Request(NULL);
+	UnicodeToUTF8((LPCWSTR)strDesURL, &pUTF8Request);
+	AUTODEL(pUTF8Request,uni1);
+	char* pEncodedRequest(NULL);
+	URLEncode(pUTF8Request, &pEncodedRequest);
+	AUTODEL(pEncodedRequest,uni2);
+
+	//Header
+	char* pUTF8Header[1];
+	CString str1 = _T("Content-Type:application/json;charset=utf-8");
+	UnicodeToUTF8((LPCWSTR)str1, &pUTF8Header[0]);
+	AUTODEL(pUTF8Header[0], utf81);
+	LPCSTR pHeader[1];
+	pHeader[0] = pUTF8Header[0];
+
+	//Body
+	char* pInfo(NULL);
+	CString strJsonBody = _T("");
+	UnicodeToUTF8((LPCWSTR)strJsonBody, &pInfo);
+	AUTODEL(pInfo, uni3);
+
+	//POST
+	DataBlock headerData;
+	DataBlock bodyData;
+	
+	DWORD dwS = GetTickCount();
+	PostAndRecvWithHeader(pEncodedRequest, pHeader, headerData, bodyData, 0, pInfo);
+	DWORD dwE = GetTickCount();
+
+	//RESULT
+	WCHAR* pUniTmp(NULL);
+	UTF8ToUnicode((char*)bodyData.pBuff, &pUniTmp);
+	AUTODEL(pUniTmp, unitmp);
+	if (pUniTmp)
+	{
+		CString strResult = CString(pUniTmp);
+		CString strLogInfo; strLogInfo.Format(_T("[LXCG_GETItemDataList]: Http返回结果: %s"), strResult);
+	}
+	json::Value my_data = json::Deserialize((char *)bodyData.pBuff);
+	if (my_data.GetType() == json::NULLVal)
+	{
+		CString strLogInfo;strLogInfo.Format(_T("[LXCG_GETItemDataList]: %s"), _T("Http返回-BodyData类型为NULL..."));
+		return FALSE;
+	}
+	
+	//解析json
+	......
+	
+	
+	
+
+
+*/
+
 namespace http_toolkit
 {
 	//////////////////////////////////////////////////////////////////////////
@@ -162,6 +225,7 @@ namespace http_toolkit
 		curl_handle = curl_easy_init();
 		
 		//curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT,3);  
+		curl_easy_setopt(curl_handle, CURLOPT_HTTPGET, 1L); //强制设置请求方式为GET【Body有数据则会以POST进行请求】
 
 		/* set URL to get */
 		curl_easy_setopt(curl_handle, CURLOPT_URL, lpRequestUTF8Encoded);
@@ -175,7 +239,7 @@ namespace http_toolkit
 		curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, plist);
 		
 		//body
-		if(strlen(lpData)>0)
+		if(strlen(lpBodyData)>0)
 			curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, lpBodyData);
 
 		/* no progress meter please */
@@ -237,7 +301,7 @@ namespace http_toolkit
 		curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, plist);
 		
 		//body
-		if(strlen(lpData)>0)
+		if(strlen(lpBodyData)>0)
 			curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, lpBodyData);
 
 		/* no progress meter please */
@@ -303,7 +367,7 @@ namespace http_toolkit
 		curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, plist);
 		
 		//body
-		if(strlen(lpData)>0)
+		if(strlen(lpBodyData)>0)
 			curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, lpBodyData);
 
 		/* no progress meter please */
@@ -359,7 +423,7 @@ namespace http_toolkit
 		curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, plist);
 		
 		//body
-		if(strlen(lpData)>0)
+		if(strlen(lpBodyData)>0)
 			curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, lpBodyData);
 
 		/* no progress meter please */
