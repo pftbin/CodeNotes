@@ -9,223 +9,202 @@
 #include <iostream>    
 using namespace std;
 
-// 替换字符串  
-static string& replace_all(string& str, const string& old_value, const string& new_value)
+#include <iostream>
+#include <string>
+#include <set>
+#include "cJSON.h"
+#include "pugixml.hpp"
+
+
+static void removeSubstring(std::string& str, const std::string& substr) 
 {
-    while (true)
-    {
-        string::size_type   pos(0);
-        if ((pos = str.find(old_value)) != string::npos)
-            str.replace(pos, old_value.length(), new_value);
-        else
-            break;
+    size_t pos = str.find(substr);
+    while (pos != std::string::npos) {
+        str.erase(pos, substr.length());
+        pos = str.find(substr, pos);
     }
-    return   str;
+}
+
+static bool checkValueNode(pugi::xml_node xmlNode, std::string& value)
+{
+    pugi::xml_node child = xmlNode.first_child();
+    if (child.first_child() == nullptr && child.next_sibling() == nullptr && child.previous_sibling() == nullptr)//xmlNode节点的子节点是数值，<xmlNode>1</xmlNode>
+    {
+        value = child.value();
+        return true;
+    }
+
+    return false;
+}
+
+static bool checkArrayNode(pugi::xml_node xmlNode)
+{
+    int broNodeCount = 0;
+    std::set<std::string> vecBrotherName;
+
+    pugi::xml_node nextNode = xmlNode.next_sibling();
+    while (!nextNode.empty())
+    {
+        vecBrotherName.insert(nextNode.name());
+        nextNode = nextNode.next_sibling();   //获取下一个兄弟节点
+        ++broNodeCount;
+    }
+    pugi::xml_node prevNode = xmlNode.previous_sibling();
+    while (!prevNode.empty())
+    {
+        vecBrotherName.insert(prevNode.name());
+        prevNode = prevNode.previous_sibling();//获取上一个兄弟节点
+        ++broNodeCount;
+    }
+
+    bool result = false;
+    if ((broNodeCount > 0) && (vecBrotherName.size() == 1))//兄弟节点大于1且名称相同
+        result = true;
+    
+    return result;
 }
 
 //string 参数  
-static string Xml2Json(string strXml)
+static void Xml2Json_help(pugi::xml_node& xmlNode, cJSON* jsonNode)
 {
-    string pNext = strXml;
-    cJSON* reJson = cJSON_CreateObject();
-    cJSON* jsonArray = cJSON_CreateArray();
-    string strArrayKey = "";
-    int nPos = 0;
-
-    while ((nPos = pNext.find("<")) >= 0)
+    if (xmlNode.empty())
     {
-        // 获取第一个节点，如：<doc><a a1="1" a2="2">123</a></doc>  
-        int nPosS = pNext.find("<");
-        int nPosE = pNext.find(">");
-        if (nPosS < 0 || nPosE < 0)
+        //无子节点==><xmlNode/>
+        cJSON_AddStringToObject(jsonNode, xmlNode.name(), xmlNode.child_value());
+    }
+    else
+    {
+        int broNodeCount = 0;
+        std::string value = "";
+
+        if (checkValueNode(xmlNode, value))
         {
-            printf("key error!");
+            cJSON_AddStringToObject(jsonNode, xmlNode.name(), value.c_str());
         }
-
-        string strKey = pNext.substr(nPosS + 1, nPosE - nPosS - 1);
-        // 解释属性，如：<a a1="1" a2="2">  
-        cJSON* jsonVal = NULL;
-        if ((nPos = strKey.find("=")) > 0)
+        else if (checkArrayNode(xmlNode))
         {
-            jsonVal = cJSON_CreateObject();
-            int nPos = strKey.find(" ");
-            string temp = strKey.substr(nPos + 1);
-            strKey = strKey.substr(0, nPos);
-            while ((nPos = temp.find("=")) > 0)
+            // Non-leaf node
+            cJSON* arrayJson = cJSON_CreateArray();
+            cJSON_AddItemToObject(jsonNode, xmlNode.name(), arrayJson);
+
+            pugi::xml_node nextNode = xmlNode.parent().first_child();//第一个
+            while (!nextNode.empty())
             {
-                int nPos1 = temp.find("=");
-                int nPos2 = temp.find("\" ", nPos1 + 1);
-
-                string strSubKey = temp.substr(0, nPos1);
-                string strSubVal = temp.substr(nPos1 + 1);
-                if (nPos2 > 0)
-                    strSubVal = temp.substr(nPos1 + 1, nPos2 - nPos1 - 1);
-
-                // 去除转义字符 \"   
-                if ((int)(nPos = strSubVal.find("\"")) >= 0)
+                cJSON* arrayItemJson = cJSON_CreateObject();
+                cJSON_AddItemToObject(arrayJson, nextNode.name(), arrayItemJson);//兄弟节点作为数组子项
+                for (pugi::xml_node childNode : nextNode.children())
                 {
-                    int nEnd = strSubVal.find("\\", nPos + 1);
-                    strSubVal = strSubVal.substr(nPos + 1, nEnd - nPos - 1);
+                    Xml2Json_help(childNode, arrayItemJson);
                 }
-                cJSON_AddItemToObject(jsonVal, ("-" + strSubKey).c_str(), cJSON_CreateString(strSubVal.c_str()));
-
-                if (nPos2 < 0)
-                    break;
-
-                temp = temp.substr(nPos2 + 2);
-            }
-        }
-
-        int nPosKeyE = pNext.find("</" + strKey + ">");
-        if (nPosKeyE < 0)
-        {
-            printf("key error!");
-        }
-        // 获取节点内容，如<a a1="1" a2="2">123</a> 或 123  
-        string strVal = pNext.substr(nPosE + 1, nPosKeyE - nPosE - 1);
-        if ((nPos = strVal.find("<")) >= 0)
-        {
-            // 包含子节点，如<a a1="1" a2="2">123</a>  
-            strVal = Xml2Json(strVal);
-
-            if (jsonVal)
-            {
-                if (strVal != "")
-                    cJSON_AddItemToObject(jsonVal, "#text", cJSON_Parse(strVal.c_str()));
-            }
-            else
-            {
-                jsonVal = cJSON_Parse(strVal.c_str());
+                nextNode = nextNode.next_sibling();   //获取下一个兄弟节点
+                xmlNode = nextNode;
             }
         }
         else
         {
-            // 不包含子节点，如123  
-            if (jsonVal)
+            // Non-leaf node
+            cJSON* objectJson = cJSON_CreateObject();
+            cJSON_AddItemToObject(jsonNode, xmlNode.name(), objectJson);
+
+            //XML节点属性 作为 Object对象属性
+            for (pugi::xml_attribute attr : xmlNode.attributes())
             {
-                if (strVal != "")
-                    cJSON_AddItemToObject(jsonVal, "#text", cJSON_CreateString(strVal.c_str()));
+                cJSON_AddStringToObject(objectJson, attr.name(), attr.value());
             }
-            else
+
+            //XML节点子节点 递归进入函数
+            //for (pugi::xml_node childNode : xmlNode.children())  //childNode可能跳过几个节点,不使用此写法遍历
+            for (pugi::xml_node childNode = xmlNode.first_child(); childNode; childNode = childNode.next_sibling())
             {
-                jsonVal = cJSON_CreateString(strVal.c_str());
+                Xml2Json_help(childNode, objectJson);
             }
         }
-
-        // 获取下一个节点  
-        pNext = pNext.substr(nPosKeyE + strKey.size() + 3);
-
-        // 根据下一节点判断是否为数组  
-        int nPosNext = pNext.find("<");
-        int nPosNextSame = pNext.find("<" + strKey + ">");
-        if (strArrayKey != "" || (nPosNext >= 0 && nPosNextSame >= 0 && nPosNext == nPosNextSame))
-        {
-            // 数组  
-            cJSON_AddItemToArray(jsonArray, jsonVal);
-            strArrayKey = strKey;
-        }
-        else
-        {
-            // 非数组  
-            cJSON_AddItemToObject(reJson, strKey.c_str(), jsonVal);
-        }
     }
-
-
-    if (strArrayKey != "")
-    {
-        cJSON_AddItemToObject(reJson, strArrayKey.c_str(), jsonArray);
-    }
-
-    string strJson = cJSON_Print(reJson);
-
-    if (reJson)
-    {
-        cJSON_Delete(reJson);
-        reJson = NULL;
-    }
-
-    return strJson;
 }
- 
-static string Json2Xml(string strJson)
+
+static std::string Xml2Json(const std::string& xmlString)
 {
-    string strXml = "";
-    cJSON* root = cJSON_Parse(strJson.c_str());
-    if (!root)
+    pugi::xml_document doc;
+    if (!doc.load_string(xmlString.c_str())) 
     {
-        printf("strJson error!");
-        return "";
+        return "Failed to parse XML string";
     }
 
-    cJSON* pNext = root->child;
-    if (!pNext)
-    {
-        return strJson;
-    }
+    cJSON* rootJsonNode = cJSON_CreateObject();
+    Xml2Json_help(doc.first_child(), rootJsonNode);
 
-    int nPos = 0;
-    while (pNext)
-    {
-        string strChild = cJSON_Print(pNext);
-        string strVal = Json2Xml(strChild);
+    char* jsonString = cJSON_Print(rootJsonNode);
+    std::string result(jsonString);
 
-        if (pNext->string != NULL)
-        {
-            string strKey = pNext->string;
-            if ((nPos = strKey.find("-")) == 0)
-            {
-                // 属性项  
-                strXml.append(" ");
-                strXml.append(strKey.substr(1));
-                strXml.append("=");
-                strXml.append(strVal);
+    cJSON_Delete(rootJsonNode);
+    free(jsonString);
 
-                if (pNext->next == NULL)
-                    strXml.append(">");
-            }
-            else if ((nPos = strKey.find("#")) == 0)
+    return result;
+}
+
+static void Json2Xml_help(cJSON* jsonNode, pugi::xml_node xmlNode)
+{
+    if (jsonNode->type == cJSON_Object) {
+        cJSON* child = jsonNode->child;
+        while (child != nullptr) {
+            if (child->type == cJSON_Array)
             {
-                // 值  
-                strXml.append(">");
-                strXml.append(strVal);
-            }
-            else if ((int)(strVal.find("=")) > 0 && (int)(strVal.find("<")) < 0)
-            {
-                // 包含属性项的键值对  
-                strXml.append("<" + strKey +">");
-                strXml.append(strVal);
-                strXml.append("</" + strKey + ">");
+                //pugi::xml_node childNode = xmlNode.append_child(child->string);
+                Json2Xml_help(child, xmlNode);
+                child = child->next;
             }
             else
             {
-                // 修正底层无键的值数组的键，如：把<JUAN_XJ_preKey>123</JUAN_XJ_preKey>中的JUAN_XJ_preKey修正  
-                if ((int)strVal.find("JUAN_XJ_preKey") >= 0)
-                {
-                    replace_all(strVal, "JUAN_XJ_preKey", strKey);
-                    strXml.append(strVal);
-                }
-                else
-                {
-                    strXml.append("<" + strKey + ">");
-                    strXml.append(strVal);
-                    strXml.append("</" + strKey + ">");
-                }
-            }
+                pugi::xml_node childNode = xmlNode.append_child(child->string);
+                Json2Xml_help(child, childNode);
+                child = child->next;
+            }   
         }
-        else
-        {
-            // 不包含键的值数组， 如：["123", "456"]，暂时转为<JUAN_XJ_preKey>123</JUAN_XJ_preKey>  
-            string strPreKey = "JUAN_XJ_preKey";
-            strXml.append("<" + strPreKey + ">");
-            strXml.append(strVal);
-            strXml.append("</" + strPreKey + ">");
+    }
+    else if (jsonNode->type == cJSON_Array) {
+        cJSON* child = jsonNode->child;
+        while (child != nullptr) {
+            pugi::xml_node childNode = xmlNode.append_child(jsonNode->string);
+            Json2Xml_help(child, childNode);
+            child = child->next;
         }
+    }
+    else if (jsonNode->type == cJSON_String) {
+        xmlNode.text().set(jsonNode->valuestring);
+    }
+    else if (jsonNode->type == cJSON_True) {
+        xmlNode.text().set("true");
+    }
+    else if (jsonNode->type == cJSON_False) {
+        xmlNode.text().set("false");
+    }
+    else if (jsonNode->type == cJSON_Number) {
+        xmlNode.text().set(std::to_string(jsonNode->valuedouble).c_str());
+    }
+}
 
-        pNext = pNext->next;
+static std::string Json2Xml(const std::string& jsonString)
+{
+    cJSON* root = cJSON_Parse(jsonString.c_str());
+    if (root == nullptr) 
+    {
+        return "Failed to parse JSON string";
     }
 
-    return strXml;
+    pugi::xml_document doc;
+    pugi::xml_node rootNode = doc.append_child("root_53908f03dd433d55");//根节点，对应json最外层的｛｝
+    Json2Xml_help(root, rootNode);
+    cJSON_Delete(root);
+
+    std::ostringstream oss;
+    doc.save(oss, "", pugi::format_raw | pugi::format_no_declaration); //no_declaration 表示不添加 <?xml version="1.0">
+    std::string result = oss.str();
+
+    //自定义:根节点不需要
+    removeSubstring(result, std::string("<root_53908f03dd433d55>"));
+    removeSubstring(result, std::string("</root_53908f03dd433d55>"));
+
+    return result;
 }
 
 //CString 参数
@@ -248,3 +227,4 @@ static CString Json2XmlEx(CString strJson)
     strXml = sXml.c_str();
     return strXml;
 }
+
