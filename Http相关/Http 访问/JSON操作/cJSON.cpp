@@ -23,6 +23,8 @@
 /* cJSON */
 /* JSON parser in C. */
 
+#pragma warning(disable: 4996)
+
 /* disable warnings about old C89 functions in MSVC */
 #if !defined(_CRT_SECURE_NO_DEPRECATE) && defined(_MSC_VER)
 #define _CRT_SECURE_NO_DEPRECATE
