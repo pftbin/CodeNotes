@@ -126,7 +126,9 @@ void C_GOSDCreatorDlg::InitBtnICON()
 	long width1 = rect.right - rect.left;
 	long height1 = rect.bottom - rect.top;
 	HICON hicon_btn1 = (HICON)LoadImageW(AfxGetInstanceHandle(),MAKEINTRESOURCE(IDI_ICON1),IMAGE_ICON,width1-6,height1-2,LR_DEFAULTCOLOR|LR_CREATEDIBSECTION);
-	p_btn1->SetIcon(hicon_btn1);	p_btn1->ShowWindow(FALSE);
+	p_btn1->SetIcon(hicon_btn1);
+	p_btn1->ShowWindow(FALSE);
+
 	CButton* p_btn2 = (CButton*)GetDlgItem(IDC_BUTTON_EQUAL2);
 	p_btn2->GetWindowRect(rect);
 	long width2 = rect.right - rect.left;

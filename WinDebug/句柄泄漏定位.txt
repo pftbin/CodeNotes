@@ -1,0 +1,31 @@
+https://blog.csdn.net/rankun1/article/details/69400469
+
+1.】Windbg打开或附加到进程
+
+2.】!htrace  -enable命令	开启句柄检测
+
+3.】!htrace  –snapshot命令 取当前进程的句柄数快照
+
+4.】运行一段时间或运行一次程序处理流程
+
+5.】!htrace –diff命令 对比当前与上一次快照的句柄差异
+
+========
+6a.】如有看到 handleleak  !xxxxxx+0x123456
+
+7a.】输入 lsahandleLeak!xxxxxx+0x123456命令 定位到句柄泄漏的位置
+
+========
+6b.】如有看到 Handle = 0x123456 -OPEN  //表示此句柄未关闭
+	
+7b.】紧接着0x456789：mymodel!myfun+0x123    //表示在mymodel的myfun函数中有句柄未关闭
+
+8b.】lsa mymodel!myfun+0x123命令  定位到句柄创建的位置 
+
+========
+6c.】如有看到 Handle = 0x123456 -OPEN  //表示此句柄未关闭
+			 Thread ID = 0x0005, Process ID = 0x0048
+7c.】根据Thread ID找到并切换到未关闭句柄所在线程
+
+8c.】kb 查看线程堆栈，分析定位代码中句柄泄漏的位置
+

@@ -1,0 +1,11 @@
+https://blog.csdn.net/u012294613/article/details/127783933
+
+1.】Windbg打开或附加到进程
+
+2.输入!runaway命令  查看各个线程使用cpu时间占比
+
+3.根据线程id切换到占比最大的线程
+
+4.
+
+

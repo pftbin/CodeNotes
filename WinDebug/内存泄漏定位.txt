@@ -1,6 +1,12 @@
-1.根据内存泄漏时的输出简单定位
+1.】根据内存泄漏时的输出简单定位
 https://blog.csdn.net/u012947501/article/details/113698333
 
+
+#include <stdlib.h>  
+#include <crtdbg.h>  
+#ifdef _DEBUG  
+#define new new(_NORMAL_BLOCK, __FILE__, __LINE__)  
+#endif  
 void EnableMemLeakCheck()
 {
 	int tmpFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
@@ -8,24 +14,20 @@ void EnableMemLeakCheck()
 	_CrtSetDbgFlag(tmpFlag);
 }
 
-int main													//入口函数，可以是Dialog的OnInitDlg
+//
+using namespace std;
+int main()							//入口函数，可以是Dialog的OnInitDlg
 {
 	EnableMemLeakCheck();
-	_CrtSetBreakAlloc(41592);  //41592 是出现内存泄漏时，输出窗口中｛｝中的数字
-	
 	//其他函数
 }
 
 
-2.CMD使用WinDebug工具进行定位
-https://blog.csdn.net/chenlycly/article/details/121295720
 
-gflags /i XXX.exe +ust										//调用gflags设置启用udmh.exe的堆栈跟踪
-															//启动XXX.exe
-umdh.exe -pn:XXX.exe -f:E:\log1.txt  						//抓取内存快照1
-															//等待程序运行一会儿
-umdh.exe -pn:XXX.exe -f:E:\log2.txt  						//抓取内存快照2
-umdh.exe E:\log1.txt E:\log2.txt -f:E:\result.txt			//比较快照差异并存储
+2.】使用WinDebug工具进行定位
+https://blog.csdn.net/qq_31917799/article/details/119270502
+
+
 
 
 

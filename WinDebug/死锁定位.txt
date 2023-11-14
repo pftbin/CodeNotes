@@ -1,0 +1,30 @@
+1.】自动分析，确认异常的位置
+    !analyze -v   //如发现运行在wow64cpu、ntdll等系统dll中，使用  .load wow64exts  +  !sw  切换到32位，再此进行自动分析
+
+2.】手动执行 STACK_COMMAND: xxxxxxx  所在行的 xxxxxxx 堆栈指令，查看当时的堆栈
+	
+3.】确认程序卡住 EnterCriticalSection 等进入临界区函数，则确认是资源访问问题（即死锁问题）
+
+
+========
+4a.】使用  !cs -l  显示当前锁定的临界区，即哪几把锁被占用未释放
+				找出占用锁的线程ID，即OwningThread指向的线程。此时应该会有相同的线程ID被列出，表示这个线程占了两把锁，最有可能是它造成了死锁
+
+5a.】切换到上述操作中列出的几个堆栈，向前查看是哪个函数导致线程占用两把锁未释放
+
+========
+4b.】使用   !findstack  ntdll!RtlpEnterCriticalSection 即可寻找堆栈那几个线程在访问临界区
+（可能是  			    ntdll_xxxx!RtlpEnterCriticalSection，根据实际堆栈修改xxx后缀）
+
+5b.】如出现以下，说明有三个线程在访问临界区（ID分别是0、41、68，注意是十进制），根据ID找到对应线程
+
+		Thread 000, 1 frame(s) match
+        * 03 0019ea88 7706ff79 ntdll_77030000!RtlpEnterCriticalSectionContended+0x1aa
+
+		Thread 041, 1 frame(s) match
+        * 03 09cafd98 7706ff79 ntdll_77030000!RtlpEnterCriticalSectionContended+0x1aa
+
+		Thread 068, 1 frame(s) match
+        * 03 0ebefbf8 7706ff79 ntdll_77030000!RtlpEnterCriticalSectionContended+0x1aa
+		
+6b.】切换到上述操作中列出的几个堆栈，向前查看是哪个函数导致线程占用两把锁未释放

@@ -70,7 +70,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opencv_core231d.lib opencv_highgui231d.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\lib;"
 				GenerateDebugInformation="true"
@@ -113,8 +112,8 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy $(TargetPath) $(SolutionDir)..\..\$(ConfigurationName)\$(SolutionName)\$(TargetFileName)&#x0D;&#x0A;"
-				Outputs="$(SolutionDir)..\..\$(ConfigurationName)\$(SolutionName)\$(TargetFileName)"
+				CommandLine="copy $(TargetPath) $(SolutionDir)exe\$(ConfigurationName)\$(TargetFileName)&#x0D;&#x0A;copy $(SolutionDir)lib\opencv_core231.dll $(SolutionDir)exe\$(ConfigurationName)\opencv_core231.dll&#x0D;&#x0A;copy $(SolutionDir)lib\opencv_highgui231.dll $(SolutionDir)exe\$(ConfigurationName)\opencv_highgui231.dll"
+				Outputs="$(SolutionDir)exe\$(ConfigurationName)\$(TargetFileName);$(SolutionDir)exe\$(ConfigurationName)\opencv_core231.dll;$(SolutionDir)exe\$(ConfigurationName)\opencv_highgui231.dll"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
