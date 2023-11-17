@@ -21,7 +21,13 @@ cls
 echo 退出程序将停止计时...
 echo 关机倒计时：%time% 秒
 set /a time-=1
-ping 127.0.0.1 -n 2 >nul
+
+::等待1秒（方法1）
+::ping 127.0.0.1 -n 2 >nul
+
+::等待1秒（方法2）
+timeout /t 1 >nul
+
 if %time% gtr 0 (
 	goto countdown
 ) else (
