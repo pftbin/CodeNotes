@@ -1,0 +1,42 @@
+1.安装g++
+	sudo apt-get update
+	sudo apt-get install g++  （依赖出错则输入提示指令进行修复,类似sudo apt-get -fix broken）
+	
+	参考：https://www.shili8.cn/article/detail_20001095728.html
+
+
+2.解决cannot find -lGL"的错误
+	sudo apt-get install libgl1-mesa-dev
+	pro文件中加入：LIBS += -lGL   （测试不需要，应该是QT默认链接这个库）
+	
+3.QT类文件命名全小写关闭：开启后并不生效，#include "header.h" 并不能导入 Header.h 文件
+
+4.提升控件类需改类名(大小写)或重新绑定类的话，需在界面编辑界面：右键->提升的窗口部件->双击修改头文件的名称，否则会造成ui_xxx.h文件每次编译报找不到头文件
+
+5.提示函数多次定义：
+	a.将声明放入h文件，实现放入cpp文件即可（h文件开始使用#defing XXX_h 防止重复定义）
+	b.如还出现多次定义问题，可能是pro文件多次引入h文件导致（这种情况Windows系统编译不会报错,麒麟系统会报错）
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
