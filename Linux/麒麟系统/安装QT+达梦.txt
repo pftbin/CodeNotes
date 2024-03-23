@@ -1,0 +1,64 @@
+QT============================================================================
+1.安装g++
+	sudo apt-get update
+	sudo apt-get install g++
+	
+2.安装OpenGL库 （构建程序出现错误: cannot find -lGL）
+	sudo apt-get install libgl1-mesa-dev
+
+3.安装gdb工具 (用于调试程序)
+	sudo apt-get install gdb
+	注：仍遇到错误可尝试执行以下指令
+	sudo apt-get install build-essential
+
+
+达梦===========================================================================
+
+A===
+1.使用 root 用户打开 /etc/security/limits.conf 文件进行修改
+	vi /etc/security/limits.conf
+	
+2.在最后添加语句（修改文件后重启生效）
+	baiyin  soft      nice       0
+	baiyin  hard      nice       0
+	baiyin  soft      as         unlimited
+	baiyin  hard      as         unlimited
+	baiyin  soft      fsize      unlimited
+	baiyin  hard      fsize      unlimited
+	baiyin  soft      nproc      65536
+	baiyin  hard      nproc      65536
+	baiyin  soft      nofile     65536
+	baiyin  hard      nofile     65536
+	baiyin  soft      core       unlimited
+	baiyin  hard      core       unlimited
+	baiyin  soft      data       unlimited
+	baiyin  hard      data       unlimited
+	
+3.重启后切换到 baiyin 用户，查看是否生效
+
+	su - baiyin
+	ulimit -a
+	
+B=====
+1.下载zip并解压
+	https://eco.dameng.com/download/
+	
+2.切换到 root 用户,在文件夹中右键打开终端，挂载iso到/mnt
+	mount -o loop dm8_20231226_x86_rh6_64.iso /mnt
+	
+3.切换至 baiyin 用户,在/mnt下安装 (注意输入key选则no)
+	cd /mnt
+	./DMInstall.bin -i
+	
+4.切换到安装目录下，进入tool目录
+	abca.sh   //用于配置数据库实例（注意字符集选UTF8）
+	manger	  //用于查看数据库数据（类似Navicat工具）
+	
+
+
+
+
+
+
+
+

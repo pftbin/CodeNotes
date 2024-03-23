@@ -1,0 +1,67 @@
+1.安装ODBC驱动（需切换到root用户，否则运行指令无反应）
+	a:  下载  	https://www.unixodbc.org/unixODBC-2.3.12.tar.gz 
+	b:  配置 	./configure --enable-gui=no
+	c： 构建	make && make install
+	d:  查看配置文件位置：	odbcinst -j
+	
+编辑 /etc/odbcinst.ini ，如下所示：
+
+[DM8 ODBC DRIVER]
+Description = ODBC DRIVER FOR DM8
+Driver = /home/baiyin/dmdbms/bin/libdodbc.so
+
+编辑 /etc/odbc.ini ，如下所示：
+	[dm8] <-是数据库名称（根据实际修改）
+	Driver 的值是odbcinst.ini中的驱动名称
+	
+[dm8]
+Description = DM ODBC DSN
+Driver = DM8 ODBC DRIVER
+SERVER = localhost
+UID = SYSDBA
+PWD = SYSDBA
+TCP_PORT = 5236
+
+	e:测试 	isql dm8 -v
+==============================================================================
+
+问题1：Can't open lib '/home/baiyin/dmdbms/bin/libdodbc.so' : file not found
+
+	A) 确保libdodbc.so文件位于指定的路径“/home/baiyin/dmdbms/bin/
+	
+	B) 修改etc/profile环境变量文件：
+		export DM_HOME="/home/baiyin/dmdbms"
+		export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/baiyin/dmdbms/bin/"
+		
+		source /etc/profile
+	
+问题2: error in load libodbcinst.so!!: 没有那个文件或目录
+	A) 确认文件存在后刷新缓存（一般文件都存在，只需要刷新缓存）
+		sudo find / -name libodbcinst.so
+		sudo ldconfig
+		
+问题3:[unixODBC][Driver Manager]Data source name not found and no default driver specified QODBC: Unable to connect
+	使用odbcinst -j 检查 odbcinst.ini 和 odbc.ini的路径
+	按照安装ODBC驱动时做相同配置
+	另：
+	注意检查/etc/odbc.ini确保数据库名称正确,即中括号中的文本
+	
+问题4：新打开终端提示 Can't open lib '/home/baiyin/dmdbms/bin/libdodbc.so' : file not found
+		
+		1.临时解决： 
+			export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/baiyin/dmdbms/bin/"，再执行isql连接即可
+		
+		2.永久解决:
+		root用户+baiyin用户都修改.bashrc文件：
+			sudo vi ~/.bashrc  
+		末尾添加内容
+			export DM_HOME="/home/baiyin/dmdbms"
+			export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/baiyin/dmdbms/bin/"
+		刷新配置
+			source ~/.bashrc
+		
+问题5:	加密模块加载失败 QODBC3: Unable to connect
+	sudo cp /home/baiyin/dmdbms/bin/libssl.so /usr/lib/x86_64-linux-gnu/
+	sudo cp /home/baiyin/dmdbms/bin/libcrypto.so /usr/lib/x86_64-linux-gnu/
+		
+
