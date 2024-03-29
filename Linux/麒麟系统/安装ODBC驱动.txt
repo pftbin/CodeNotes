@@ -27,13 +27,22 @@ TCP_PORT = 5236
 
 问题1：Can't open lib '/home/baiyin/dmdbms/bin/libdodbc.so' : file not found
 
-	A) 确保libdodbc.so文件位于指定的路径“/home/baiyin/dmdbms/bin/
+	A) 确保libdodbc.so文件位于指定的路径“/home/baiyin/dmdbms/bin
 	
-	B) 修改etc/profile环境变量文件：
-		export DM_HOME="/home/baiyin/dmdbms"
-		export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/baiyin/dmdbms/bin/"
-		
-		source /etc/profile
+	1.针对用户修改（命令行打开时生效）
+		root用户+baiyin用户都修改.bashrc文件：
+			sudo vi ~/.bashrc  
+		末尾添加内容
+			export DM_HOME="/home/baiyin/dmdbms"
+			export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/baiyin/dmdbms/bin"
+		刷新配置
+			source ~/.bashrc
+			
+	2.双击直接打开生效
+		sudo su
+		vi /etc/ld.so.conf
+		/home/baiyin/dmdbms/bin				（在末尾添加）
+		ldconfig（在默认搜寻目录(/lib和/usr/lib)以及动态库配置文件/etc/ld.so.conf内所列的目录下,搜索出可共享的动态链接库(格式如前介绍,lib*.so*),进而创建出动态装入程序(ld.so)所需的连接和缓存文件.缓存文件默认为/etc/ld.so.cache,此文件保存已排好序的动态链接库名字列表）
 	
 问题2: error in load libodbcinst.so!!: 没有那个文件或目录
 	A) 确认文件存在后刷新缓存（一般文件都存在，只需要刷新缓存）
@@ -45,22 +54,9 @@ TCP_PORT = 5236
 	按照安装ODBC驱动时做相同配置
 	另：
 	注意检查/etc/odbc.ini确保数据库名称正确,即中括号中的文本
-	
-问题4：新打开终端提示 Can't open lib '/home/baiyin/dmdbms/bin/libdodbc.so' : file not found
+
 		
-		1.临时解决： 
-			export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/baiyin/dmdbms/bin/"，再执行isql连接即可
-		
-		2.永久解决:
-		root用户+baiyin用户都修改.bashrc文件：
-			sudo vi ~/.bashrc  
-		末尾添加内容
-			export DM_HOME="/home/baiyin/dmdbms"
-			export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/baiyin/dmdbms/bin/"
-		刷新配置
-			source ~/.bashrc
-		
-问题5:	加密模块加载失败 QODBC3: Unable to connect
+问题4:	加密模块加载失败 QODBC3: Unable to connect
 	sudo cp /home/baiyin/dmdbms/bin/libssl.so /usr/lib/x86_64-linux-gnu/
 	sudo cp /home/baiyin/dmdbms/bin/libcrypto.so /usr/lib/x86_64-linux-gnu/
 		
