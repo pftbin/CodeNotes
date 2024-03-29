@@ -12,6 +12,7 @@ public:
 
 protected:
 	CString		m_strPipeName;
+	UINT		m_nPipeClass;
 
 	HANDLE		m_hPipe;
 	int			m_nStackSize;
@@ -20,4 +21,6 @@ protected:
 	BOOL	InitPipeServer();
 	BOOL	WritePipeData(CString strMessage, DWORD& dwWriteCount);
 	BOOL	ReadPipeData(CString& strMessage, DWORD& dwReadCount);
+	
+	virtual BOOL DealWithCMD(CString strCMDMessage,CString& strResult) = 0;
 };

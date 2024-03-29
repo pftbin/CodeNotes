@@ -14,6 +14,7 @@ public:
 
 protected:
 	CString		m_strPipeName;
+	UINT		m_nPipeClass;
 	HANDLE		m_hPipe;
 	int			m_nStackSize;
 	HANDLE		m_hThread;

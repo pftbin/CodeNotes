@@ -11,6 +11,7 @@ DWORD WINAPI THREAD_CLIENT(LPVOID lp)
 IPipeClient::IPipeClient(void)
 {
 	m_strPipeName	= _T("\\\\.\\Pipe\\MyPipeTest");//管道名，以此区分管道，相同即可通信
+	m_nPipeClass    = 0;
 
 	m_hPipe			= NULL;
 	m_nStackSize	= 1024;

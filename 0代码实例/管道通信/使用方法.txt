@@ -1,0 +1,45 @@
+管道通信一般用于进程间通信：
+1.Client向Server发送CMD
+2.Server收到CMD后作出处理
+3.Client可等待Server处理完，也可不等待
+
+
+注：由于IPipeServer::PipeServerWork已固定Server收到CMD后的处理
+	一般做法是在IPipeServer::PipeServerWork调用虚函数，
+	使用时继承IPipeServer和IPipeClient，
+	
+
+程序A：
+class CPipeClient_CustomName :
+	public IPipeClient
+{
+	m_nPipeClass	= PIPE_CLASS_CustomName;//唯一标志数值,用于区分类
+	m_strPipeName = _T("\\\\.\\Pipe\\CustomName");
+}
+
+
+CPipeClient_CustomName MyClient;
+PIPECMD cmdTest;
+cmdTest.strMessageID = 唯一标志CMD字符；（时间或GUID）
+cmdTest.strReceive = 要发送的文本；
+
+MyClient.AddCmd();
+//等待或继续
+
+
+程序B：
+class CPipeServer_CustomName :
+	public IPipeServer
+{
+	m_nPipeClass	= PIPE_CLASS_CustomName;//唯一标志数值,用于区分类
+	m_strPipeName = _T("\\\\.\\Pipe\\CustomName");
+}
+
+virtual BOOL DealWithCMD(CString strCMDMessage,CString& strResult)
+{
+	//根据strCMDMessage做处理
+	
+}
+
+
+

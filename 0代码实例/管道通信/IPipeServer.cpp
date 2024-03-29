@@ -10,6 +10,7 @@ DWORD WINAPI THREAD_SERVER(LPVOID lp)
 IPipeServer::IPipeServer(void)
 {
 	m_strPipeName	= _T("\\\\.\\Pipe\\MyPipeTest");//管道名，以此区分管道，相同即可通信
+	m_nPipeClass    = 0;
 
 	m_hPipe			= NULL;
 	m_nStackSize	= 1024;
@@ -50,18 +51,21 @@ DWORD IPipeServer::PipeServerWork()
 				strInfo.Format(_T("管道[%s]有客户接入."),m_strPipeName);
 			}
 
-			CString strReceiveMessage,strSendMessage;
+			CString strReceiveMessage,strResut;
 			DWORD	dwReadCount = 0;
 			strInfo.Format(_T("管道[%s]开始读取数据."),m_strPipeName);
 			if(ReadPipeData(strReceiveMessage, dwReadCount))
 			{
-				CString strMsg;strMsg.Format(_T("服务端读取到数据: %s"),strReceiveMessage);
-				AfxMessageBox(strMsg);
+				//此处调用虚函数
+				bRet = DealWithCMD(strReceiveMessage,strResut);
+				
+				//CString strMsg;strMsg.Format(_T("服务端读取到数据: %s"),strReceiveMessage);
+				//AfxMessageBox(strMsg);
 			}
 			else
 			{
-				CString strMsg;strMsg.Format(_T("服务端读取数据失败"));
-				AfxMessageBox(strMsg);
+				strInfo.Format(_T("服务端读取数据失败"));
+				//AfxMessageBox(strInfo);
 			}			
 		}
 	}
