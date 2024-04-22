@@ -1,0 +1,59 @@
+	//构造函数中创建字体
+	m_fnVersion.CreateFont(
+		20, 
+		0, 
+		0, 
+		0, 
+		FW_NORMAL, 
+		FALSE, 
+		FALSE, 
+		FALSE, 
+		ANSI_CHARSET, 
+		OUT_DEFAULT_PRECIS,
+		CLIP_DEFAULT_PRECIS, 
+		DEFAULT_QUALITY, 
+		DEFAULT_PITCH | FF_SWISS, 
+		_T("Arial"));
+
+	//绘制图片+文本 
+	CRect rect; m_stcImage.GetClientRect(&rect);
+	CDC* pDC = m_stcImage.GetDC();
+	HBITMAP hBmp = (HBITMAP)::LoadImage(NULL, _T("C:/blue.bmp"), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+	BITMAP bm;
+	if(hBmp != NULL && CBitmap::FromHandle(hBmp)->GetBitmap(&bm))
+	{
+		
+
+		CDC memDC;
+		if (memDC.CreateCompatibleDC(pDC))
+		{
+			//绘制图片
+			HBITMAP hOldBmp = (HBITMAP)memDC.SelectObject(hBmp);
+			int oldMOde = pDC->SetStretchBltMode(HALFTONE);
+			pDC->StretchBlt(rect.left, rect.top, rect.Width(), rect.Height(), &memDC, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
+			pDC->SetStretchBltMode(oldMOde);
+			memDC.SelectObject(hBmp);
+			memDC.DeleteDC();
+
+
+#if 1		//图片上绘制文字
+
+			CString text; text.Format(_T("%d"), 123);
+			CFont* pOldFont = pDC->SelectObject(&m_fnVersion);
+			COLORREF textColor = RGB(255, 0, 0); // 红色文本
+			COLORREF oldTextColor = pDC->SetTextColor(textColor);
+
+			// 设置透明背景模式
+			int oldBkMode = pDC->SetBkMode(TRANSPARENT);
+
+			// 绘制文本
+			pDC->TextOut(rect.left + 10, rect.top + 10, text);
+
+			// 恢复设置
+			pDC->SelectObject(pOldFont);
+			pDC->SetTextColor(oldTextColor);
+			pDC->SetBkMode(oldBkMode);
+#endif
+		}
+
+	}

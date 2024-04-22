@@ -1,0 +1,140 @@
+
+#include <QFuture>
+#include <QtConcurrent/QtConcurrent>
+#include <QMutex>
+#include <QThread>
+#include <QRunnable>
+#include <QThreadPool>
+
+================================================================
+方式1: 将共享资源以参数形式传入全局函数,通过QtConcurrent::run后台运行
+
+实例：
+void threadFunInsert(IDBC* pDBObject)
+{
+    if (pDBObject)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+			//注意共享资源保护
+            pDBObject->InsertNewItem();
+            QThread::msleep(100);
+        }
+    }
+}
+
+QFuture<void> future1 = QtConcurrent::run(threadFunInsert, m_pDBObject);
+
+// 等待函数执行完成（也可不等待,继续其他操作）
+while (!future1.isFinished())
+{
+    qDebug() << "threadFunUpdate is still running...";
+    QThread::sleep(1); // 每秒检查一次函数执行状态
+}
+
+
+================================================================
+方式2：继承Qthread重写run,外部创建线程对象、启动线程、等待线程
+
+实例：
+class InsertThread : public QThread
+{
+public:
+    InsertThread(QDMTester* pParent)
+    {
+        m_pParent = pParent;
+    }
+
+public:
+    void run() override
+    {
+        if (m_pParent)
+        {
+            m_pParent->doInsert();
+        }
+    }
+private:
+    QDMTester* m_pParent;
+};
+
+void QDMTester::doInsert()
+{
+    for (int i = 0; i < 10; i++)
+    {
+        m_pDBObject->InsertNewItem();
+        QThread::msleep(100);
+    }
+}
+
+QThread* thread1 = new InsertThread(this);
+thread1->start();
+thread1->wait();	// 等待函数执行完成（也可不等待,继续其他操作）
+
+
+================================================================
+方式3：继承QRunnable重写run,将QRunnable对象放入线程池运行（可以是不同的QRunnable对象）
+
+实例：
+class InsertRunnable : public QRunnable
+{
+public:
+    InsertRunnable(QDMTester* pParent)
+    {
+        m_pParent = pParent;
+    }
+
+public:
+    void run() override
+    {
+        if (m_pParent)
+        {
+            m_pParent->doInsert();
+        }
+    }
+private:
+    QDMTester* m_pParent;
+};
+
+// 创建线程池对象
+QThreadPool *threadPool = QThreadPool::globalInstance();
+// 设置最大线程数（可选）
+threadPool->setMaxThreadCount(4); // 设置最大线程数为4
+// 提交第1个任务
+InsertRunnable *insertTask = new InsertRunnable(this);
+threadPool->start(insertTask);
+// 提交第2个任务
+DeleteRunnable *deleteTask = new DeleteRunnable(this);
+threadPool->start(deleteTask);
+// 提交第3个任务
+UpdateRunnable *updateTask = new UpdateRunnable(this);
+threadPool->start(updateTask);
+
+
+================================================================
+基础QThread：（方式1）
+特点：直接继承 QThread 类，并重写其 () 方法来定义线程要执行的任务。
+优点：使用简单，适用于简单的线程需求。
+缺点：容易出现多线程使用不当的问题，例如线程管理不当、资源竞争等。
+适用场景：适合简单的线程任务，对多线程控制要求不高的情况。
+
+使用QFuture：（方式2）
+特点：使用 QtConcurrent::run() 函数创建线程，返回一个 QFuture 对象用于监视任务的执行状态。
+优点：简化了多线程任务的管理，更加高级、灵活。
+缺点：对于复杂的多线程任务，可能不够灵活，无法直接获取线程对象进行更多控制。
+适用场景：适合简单的并发任务，不需要对线程进行精细控制的情况。
+
+使用QThreadPool：（方式3）
+特点：使用 QThreadPool 管理多个线程执行任务，通过继承 QRunnable 实现具体任务。
+优点：灵活性较高，可以控制线程池的大小、提交不同功能的任务，适用于较为复杂的多线程任务。
+缺点：相比于 QFuture 可能稍显繁琐，需要定义任务类，并手动提交任务。
+适用场景：适合需要更精细控制多线程任务，对线程池大小、任务类型等有特殊要求的情况。
+
+
+
+
+
+
+
+
+
+
