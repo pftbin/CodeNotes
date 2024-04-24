@@ -30,7 +30,7 @@ QString ConvertToQString(const QVariant &variant)
     switch(variant.typeId())
     {
     case QMetaType::QString:
-        return variant.toString();
+        return variant.toString().trimmed();
     case QMetaType::Int:
     case QMetaType::UInt:
         return QString::number(variant.toInt());
@@ -38,8 +38,32 @@ QString ConvertToQString(const QVariant &variant)
         return QString::number(variant.toDouble());
     // Add more cases here for other types that you want to convert
     default:
-        return QString();
+        return variant.toString().trimmed();
     }
+}
+
+std::string QStringToStdString(QString& qString)
+{
+    return qString.toStdString();
+}
+QString StdStringToQString(std::string& stdString)
+{
+    return QString::fromStdString(stdString);
+}
+
+int MatchQStringListIdx(QStringList& stringList, QString& qString)
+{
+    int nMatchIndex = -1;
+    for (int i = 0; i < stringList.size(); i++)
+    {
+        if (stringList[i] == qString)
+        {
+            nMatchIndex = i;
+            break;
+        }
+    }
+
+    return nMatchIndex;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -104,11 +128,133 @@ bool saveStringToFile(const QString& filePath, const QString& content)
     file.close();
     return true;
 }
+bool openSelectColorDialog(QColor& color)
+{
+    QColorDialog dialog;
+    dialog.setCurrentColor(color);
+    if (dialog.exec())
+    {
+        color = dialog.selectedColor();
+        return true;
+    }
+
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+int AfxMessageBox(QString strTitle, QString strMessage, unsigned int uID, bool bChinese)
+{
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(strTitle);
+    msgBox.setText(strMessage);
+    msgBox.setIcon(QMessageBox::Question); // 问题图标
+
+    switch (uID)
+    {
+        case MB_RETRYCANCEL:
+        {
+            msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Cancel);
+            if (bChinese)
+            {
+                msgBox.button(QMessageBox::Retry)->setText(("重试"));
+                msgBox.button(QMessageBox::Cancel)->setText(("取消"));
+            }
+        }
+        break;
+        case MB_YESNO:
+        {
+            msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+            if (bChinese)
+            {
+                msgBox.button(QMessageBox::Yes)->setText(("是"));
+                msgBox.button(QMessageBox::No)->setText(("否"));
+            }
+        }
+        break;
+        case MB_YESNOCANCEL:
+        {
+            msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+            if (bChinese)
+            {
+                msgBox.button(QMessageBox::Cancel)->setText(("取消"));
+                msgBox.button(QMessageBox::Yes)->setText(("是"));
+                msgBox.button(QMessageBox::No)->setText(("否"));
+            }
+        }
+        break;
+        case MB_ABORTRETRYIGNORE:
+        {
+            msgBox.setStandardButtons(QMessageBox::Retry | QMessageBox::Abort | QMessageBox::Ignore);
+            if (bChinese)
+            {
+                msgBox.button(QMessageBox::Retry)->setText(("重试"));
+                msgBox.button(QMessageBox::Abort)->setText(("中止"));
+                msgBox.button(QMessageBox::Ignore)->setText(("忽略"));
+            }
+        }
+        break;
+        case MB_OKCANCEL:
+        {
+            msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+            if (bChinese)
+            {
+                msgBox.button(QMessageBox::Ok)->setText(("确认"));
+                msgBox.button(QMessageBox::Cancel)->setText(("取消"));
+            }
+        }
+        break;
+        case MB_OK:
+        default:
+        {
+            msgBox.setStandardButtons(QMessageBox::Ok);
+            if (bChinese)
+            {
+                msgBox.button(QMessageBox::Ok)->setText(("确认"));
+            }
+        }
+        break;
+    }
+
+    return msgBox.exec();
+}
+int AfxWarningBox(QString strTitle, QString strMessage, bool bChinese)
+{
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(strTitle);
+    msgBox.setText(strMessage);
+    msgBox.setIcon(QMessageBox::Warning); // 警告图标
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    if (bChinese)
+    {
+        msgBox.button(QMessageBox::Ok)->setText(("确认"));
+    }
+
+    return msgBox.exec();
+}
+int AfxErrorBox(QString strTitle, QString strMessage, bool bChinese)
+{
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(strTitle);
+    msgBox.setText(strMessage);
+    msgBox.setIcon(QMessageBox::Critical); // 错误图标
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    if (bChinese)
+    {
+        msgBox.button(QMessageBox::Ok)->setText(("确认"));
+    }
+
+    return msgBox.exec();
+}
 
 ////////////////////////////////////////////////////////////////////////////////////
 qint64 getTickCount()
 {
     return QDateTime::currentMSecsSinceEpoch();
+}
+QString getCurrentTime()
+{
+    QDateTime currentDateTime = QDateTime::currentDateTime();
+    return currentDateTime.toString("yyyy-MM-dd HH:mm:ss");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

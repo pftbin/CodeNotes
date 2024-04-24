@@ -3,10 +3,15 @@
 
 #include <QString>
 #include <QObject>
+#include <QUrl>
 #include <QNetworkAccessManager>
+#include <QNetworkRequest>
 #include <QNetworkReply>
-#include <QFile>
+#include <QEventLoop>
 #include <QTimer>
+#include <QFileInfo>
+#include <QFile>
+#include <QDir>
 
 class HttpHelper : public QObject
 {

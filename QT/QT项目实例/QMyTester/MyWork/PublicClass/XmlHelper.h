@@ -1,13 +1,17 @@
 ﻿#ifndef XMLHELPER_H
 #define XMLHELPER_H
 
+#include <QString>
+#include <QObject>
 #include <QDomDocument>
 #include <QXmlStreamWriter>
 #include <QFile>
 #include <QDebug>
 
-class XmlHelper
+class XmlHelper : public QObject
 {
+    Q_OBJECT
+
 public:
     XmlHelper();
 

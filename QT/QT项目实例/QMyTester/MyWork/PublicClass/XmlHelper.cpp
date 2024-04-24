@@ -10,12 +10,14 @@ bool XmlHelper::loadXmlFromFile(const QString& filePath, QDomDocument& xmlDocume
     bool result = true;
     QFile file(filePath);
     if (!file.open(QFile::ReadOnly | QFile::Text)) {
-        qWarning() << "Failed to open file for reading";
+        QString strText = QString(tr("Failed to open file for reading"));
+        qDebug() << strText;
         result = false;
     }
 
     if (!xmlDocument.setContent(&file)) {
-        qWarning() << "Failed to parse XML content";
+        QString strText = QString(tr("Failed to parse XML content"));
+        qDebug() << strText;
         result = false;
     }
     file.close();
@@ -27,7 +29,8 @@ bool XmlHelper::loadXmlFromString(const QString& xmlString, QDomDocument& xmlDoc
 {
     bool result = true;
     if (!xmlDocument.setContent(xmlString)) {
-        qWarning() << "Failed to parse XML content";
+        QString strText = QString(tr("Failed to parse XML content"));
+        qDebug() << strText;
         result = false;
     }
 
@@ -49,7 +52,8 @@ bool XmlHelper::saveXmlToFile(const QDomDocument& xmlDocument, const QString& fi
 {
     QFile file(filePath);
     if (!file.open(QFile::WriteOnly | QFile::Text)) {
-        qWarning() << "Failed to open file for writing";
+        QString strText = QString(tr("Failed to open file for writing"));
+        qDebug() << strText;
         return false;
     }
 

@@ -1,14 +1,4 @@
 ﻿#include "HttpHelper.h"
-#include <QNetworkRequest>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QEventLoop>
-#include <QTimer>
-#include <QFileInfo>
-#include <QMessageBox>
-#include <QUrl>
-#include <QDir>
-#include <QString>
 
 HttpHelper::HttpHelper()
 {
@@ -148,18 +138,15 @@ bool HttpHelper::HttpDownload_Get(const QString strUrl, QString strPath)
 {
     if (strUrl.isEmpty())
     {
-        QString strText = QString::fromLocal8Bit("请指定需要下载的URL");
-        QMessageBox message(QMessageBox::NoIcon, "错误",strText);
-        message.exec();
+        QString strText = QString(tr("URL is empty..."));
+        qDebug() << strText;
         return false;
     }
 
     QUrl newUrl = QUrl::fromUserInput(strUrl);
     if (!newUrl.isValid())
     {
-        QString strText = QString("无效URL: %1 \n 错误信息: %2").arg(strUrl, newUrl.errorString());
-        QMessageBox message(QMessageBox::NoIcon, "错误",strText);
-        message.exec();
+        QString strText = QString(tr("Invalid URL: %1 \n Error: %2")).arg(strUrl, newUrl.errorString());
         return false;
     }
 
@@ -171,8 +158,8 @@ bool HttpHelper::HttpDownload_Get(const QString strUrl, QString strPath)
     m_pDownloadedFile =new QFile(fullFileName);  //创建临时文件
     if (!m_pDownloadedFile->open(QIODevice::WriteOnly))
     {
-        QMessageBox message(QMessageBox::NoIcon, tr("Error"), tr("Open File Failed..."));
-        message.exec();
+        QString strText = QString(tr("Open File Failed..."));
+        qDebug() << strText;
         return false;
     }
 
@@ -191,17 +178,16 @@ bool HttpHelper::HttpDownload_Post(const QString strUrl, const QString strData, 
 {
     if (strUrl.isEmpty())
     {
-        QMessageBox message(QMessageBox::NoIcon, tr("Error"),tr("URL is Empty..."));
-        message.exec();
+        QString strText = QString(tr("URL is empty..."));
+        qDebug() << strText;
         return false;
     }
 
     QUrl newUrl = QUrl::fromUserInput(strUrl);
     if (!newUrl.isValid())
     {
-        QString strText = QString(tr("Invalid URL: %1 \n Error Message: %2")).arg(strUrl, newUrl.errorString());
-        QMessageBox message(QMessageBox::NoIcon, "Error",strText);
-        message.exec();
+        QString strText = QString(tr("Invalid URL: %1 \n Error: %2")).arg(strUrl, newUrl.errorString());
+        qDebug() << strText;
         return false;
     }
 
@@ -213,8 +199,8 @@ bool HttpHelper::HttpDownload_Post(const QString strUrl, const QString strData, 
     m_pDownloadedFile =new QFile(fullFileName);  //创建临时文件
     if (!m_pDownloadedFile->open(QIODevice::WriteOnly))
     {
-        QMessageBox message(QMessageBox::NoIcon, tr("Error"), tr("Open File Failed..."));
-        message.exec();
+        QString strText = QString(tr("Open File Failed..."));
+        qDebug() << strText;
         return false;
     }
 
