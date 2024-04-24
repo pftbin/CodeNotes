@@ -53,10 +53,10 @@ QString JsonHelper::saveToString(const QJsonArray &jsonArray)
     return jsonDoc.toJson(QJsonDocument::Indented);
 }
 
-bool loadStringToArray(const QString &jsonString, QJsonArray &jsonArray)
+bool JsonHelper::loadStringToArray(const QString &jsonString, QJsonArray &jsonArray)
 {
     QJsonDocument jsonDoc = QJsonDocument::fromJson(jsonString.toUtf8());
-    if (jsonDoc.isNull() || !jsonDoc.isObject()) {
+    if (jsonDoc.isNull() || !jsonDoc.isArray()) {
         qDebug() << "Invalid JSON string";
         return false;
     }
