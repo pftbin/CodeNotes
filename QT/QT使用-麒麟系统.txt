@@ -17,7 +17,8 @@
 	a.将声明放入h文件，实现放入cpp文件即可（h文件开始使用#defing XXX_h 防止重复定义）
 	b.如还出现多次定义问题，可能是pro文件多次引入h文件导致（这种情况Windows系统编译不会报错,麒麟系统会报错）
 
-
+6.Segmentation fault (core dumped)
+	可能是文件编码问题：保证文件编码为UTF-8
 
 
 

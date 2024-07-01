@@ -10,9 +10,10 @@
 方式1: 将共享资源以参数形式传入全局函数,通过QtConcurrent::run后台运行
 
 实例：
+bool g_work = true；
 void threadFunInsert(IDBC* pDBObject)
 {
-    if (pDBObject)
+    if (pDBObject && g_work)
     {
         for (int i = 0; i < 10; i++)
         {
@@ -26,11 +27,9 @@ void threadFunInsert(IDBC* pDBObject)
 QFuture<void> future1 = QtConcurrent::run(threadFunInsert, m_pDBObject);
 
 // 等待函数执行完成（也可不等待,继续其他操作）
-while (!future1.isFinished())
-{
-    qDebug() << "threadFunUpdate is still running...";
-    QThread::sleep(1); // 每秒检查一次函数执行状态
-}
+g_work = false; //主动退出
+future1.cancel();//主动退出2
+future1.waitForFinished();
 
 
 ================================================================
@@ -69,6 +68,60 @@ void QDMTester::doInsert()
 QThread* thread1 = new InsertThread(this);
 thread1->start();
 thread1->wait();	// 等待函数执行完成（也可不等待,继续其他操作）
+
+
+方式2：支持线程接收外部事件（消息）
+
+class InsertThread : public QThread
+{
+	Q_OBJECT
+
+
+public:
+	InsertThread(void* pParam)
+		: m_pParam(pParam) 
+	{
+		m_runing = true;
+	}
+
+	void run() override
+	{
+		while (m_runing)
+		{
+			// m_pParam在此处转换成指定类型指针
+
+			// 检查收到的事件
+			QCoreApplication::processEvents();
+		}
+	}
+
+protected:
+	bool event(QEvent* event) override
+	{
+		if (event->type() == QEvent::User + 1)  //根据事件类型做处理 
+		{
+			m_runing = false;//退出线程
+			return true;
+		}
+		return QThread::event(event);
+	}
+private:
+	bool  m_runing；
+	void* m_pParam;
+}
+
+QThread* thread1 = new InsertThread(this);
+thread1->start();
+
+
+// 自定义退出事件类
+class QuitEvent : public QEvent
+{
+public:
+    QuitEvent() : QEvent(QEvent::User + 1) {} // 假设退出事件的类型为 User + 1
+};
+QuitEvent *quitEvent = new QuitEvent();
+QCoreApplication::postEvent(&thread, quitEvent);
 
 
 ================================================================

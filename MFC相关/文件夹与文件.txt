@@ -235,6 +235,38 @@ FW1File.Close();
 
 4.文本文件操作
 
+//读取UTF8文件
+void UTF8ToUnicode(char* pUTF8Src, WCHAR** ppUnicodeDst)
+{
+	int nUnicodeLen;
+	nUnicodeLen = MultiByteToWideChar(CP_UTF8, 0, pUTF8Src, -1, NULL, 0);
+	nUnicodeLen += 1;
+	*ppUnicodeDst = new WCHAR[nUnicodeLen];
+	//转为Unicode
+	MultiByteToWideChar(CP_UTF8, 0, pUTF8Src, -1, *ppUnicodeDst, nUnicodeLen);
+}
+CString	GetFileContent(CString strFile, int nStartPos = 0)
+{
+	CFile file;
+	file.Open(strFile, CFile::modeRead);
+	ULONG lLength = file.GetLength() + 1;
+	char* pBuf = new char[lLength];
+	memset(pBuf, 0, lLength);
+	CString strContent = _T("");
+	file.Seek(nStartPos, 0);
+	file.Read(pBuf, lLength - 1);
+
+	WCHAR* pUniFilename(NULL);
+	UTF8ToUnicode(pBuf, &pUniFilename);
+	file.Close();
+	strContent = pUniFilename;
+	delete[]pUniFilename;
+	delete[]pBuf;
+
+	strContent.Trim(); strContent.Replace(_T("\r\n"), _T(""));
+	return strContent;
+}
+
 //读取
 void CFileView::OnFileRead()
 {
