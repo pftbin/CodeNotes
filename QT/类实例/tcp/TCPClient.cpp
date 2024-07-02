@@ -208,12 +208,20 @@ void TCPClient::handleConnected()
 void TCPClient::handleDisconnected()
 {
     QTcpSocket *pClientSocket = static_cast<QTcpSocket*>(sender());
+    if (pClientSocket)
+        pClientSocket->close();
+
     if (m_pTCPHandler)
         m_pTCPHandler->HandleClose(pClientSocket, NULL);
+
+    emit reconectNotify();
 }
 void TCPClient::handleError(QAbstractSocket::SocketError socketError)
 {
     QTcpSocket *pClientSocket = static_cast<QTcpSocket*>(sender());
+    if (pClientSocket)
+        pClientSocket->close();
+
     if (m_pTCPHandler)
         m_pTCPHandler->HandleClose(pClientSocket, NULL);
 

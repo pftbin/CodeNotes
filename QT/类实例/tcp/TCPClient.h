@@ -30,6 +30,7 @@ public:
 
 signals:
     void messageReceived(const QString &message);
+    void reconectNotify();
 
 private slots:
     void handleRecvMessage();
