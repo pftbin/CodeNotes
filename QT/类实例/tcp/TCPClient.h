@@ -24,6 +24,7 @@ public:
     void setHandler(ITCPHandler* pTCPHandler, IMsgBlockStrategy* pMsgBlockStrategy = NULL);
 
     void connectToServer(const QString &ip, quint16 port);
+    bool isConnected();
     bool sendMessage(QString &message);
     bool sendMessage(QByteArray &message);
 

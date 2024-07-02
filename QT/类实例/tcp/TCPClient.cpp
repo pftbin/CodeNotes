@@ -70,6 +70,7 @@ TCPClient::TCPClient(QObject *parent)
 TCPClient::~TCPClient()
 {
     delete m_socket;
+    m_socket = NULL;
 
     delete [] m_rcvBuf;
     m_rcvBufLen = 0;
@@ -86,6 +87,10 @@ void TCPClient::connectToServer(const QString &ip, quint16 port)
     QHostAddress address(ip);
     m_socket->connectToHost(address, port);
 }
+bool TCPClient::isConnected()
+{
+    return (m_socket && m_socket->state()==QAbstractSocket::ConnectedState);
+}
 bool TCPClient::sendMessage(QString &message)
 {
     bool bSend = false;
@@ -100,11 +105,16 @@ bool TCPClient::sendMessage(QString &message)
         arrayData_final = utf8ToUtf16be(message);
     }
 
-    if (m_socket && m_socket->state() == QAbstractSocket::ConnectedState)
+    if (m_socket)
     {
-        m_socket->write(arrayData_final);
-        m_socket->flush();
-        bSend = true;
+        if (m_socket->state() == QAbstractSocket::ConnectedState)
+        {
+            if (m_socket->write(arrayData_final) == arrayData_final.size())
+            {
+                m_socket->flush();
+                bSend = true;
+            }
+        }
     }
 
     return bSend;
