@@ -1,0 +1,67 @@
+1.下载地址
+	https://downloads.mysql.com/archives/c-odbc/
+	
+2.安装[在myodbc-installer文件所在目录打开终端]
+	sudo chmod +x ./myodbc-installer 
+	sudo ./myodbc-installer 
+	
+3.注册/卸载
+                                                                      
+|    myodbc-installer <Object> <Action> [Options]                      
+|                                                                      
+| Object                                                               
+|                                                                      
+|     -d driver                                                        
+|     -s datasource                                                    
+|                                                                      
+| Action                                                               
+|                                                                      
+|     -l list                                                          
+|     -a add (add/update for data source)                              
+|     -r remove                                                        
+|     -h display this help page and exit                               
+|                                                                      
+| Options                                                              
+|                                                                      
+|     -n <name>                                                        
+|     -t <attribute string>                                            
+|        if used for handling data source names the <attribute string> 
+|        can contain ODBC options for establishing connections to MySQL
+|        Server. The full list of ODBC options can be obtained from    
+|        http://dev.mysql.com/doc/connector-odbc/en/                   
+|     -c0 add as both a user and a system data source                  
+|     -c1 add as a user data source                                    
+|     -c2 add as a system data source (default)                        
+|     
+|    例：                                                       
+|                                                                      
+|    List drivers                                                      
+|    shell> myodbc-installer -d -l                                     
+|                                                                      
+|    Register a Unicode driver (UNIX example)                          
+|    shell> myodbc-installer -d -a -n "MySQL ODBC 8.3 Unicode Driver" \ 
+|              -t "DRIVER=/path/to/driver/libmyodbc8w.so;SETUP=/path/to/gui/myodbc8S.so"
+|                                                                      
+|      Note                                                            
+|         * The /path/to/driver is /usr/lib for 32-bit systems and     
+|           some 64-bit systems, and /usr/lib64 for most 64-bit systems
+|                                                                      
+|         * driver_name is libmyodbc8a.so for the ANSI version and     
+|           libmyodbc8w.so for the Unicode version of MySQL ODBC Driver
+|                                                                      
+|         * The SETUP parameter is optional; it provides location of   
+|           the GUI module (libmyodbc8S.so) for DSN setup, which       
+|           is not supported on Solaris and Mac OSX systems            
+|                                                                      
+|    Add a new system data source name for Unicode driver              
+|    shell> myodbc-installer -s -a -c2 -n "test" \                  
+|              -t "DRIVER=MySQL ODBC 8.3 Unicode Driver;SERVER=localhost;DATABASE=test;UID=myid;PWD=mypwd"
+|                                                                      
+|    List data source name attributes for 'test'                       
+|    shell> myodbc-installer -s -l -c2 -n "test"      
+
+实例：
+	注册驱动：		sudo ./myodbc-installer -a -d -n "MYSQL ODBC Driver" -t "Driver=/home/playout/odbc_mysql/lib/libmyodbc8w.so"
+	新增DSN数据源：	sudo ./myodbc-installer -s -a  -c2  -n "netdb_moc" -t "Driver=MYSQL ODBC Driver; SERVER=172.16.167.10:3306;DATABASE=netdb_moc;UID=root;PWD=root"	
+
+

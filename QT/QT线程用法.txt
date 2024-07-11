@@ -35,9 +35,14 @@ future1.waitForFinished();
 ================================================================
 方式2：继承Qthread重写run,外部创建线程对象、启动线程、等待线程
 
+注意：	1.线程类及事件类定义放在主程序类下方（h文件中）
+		2.在主程序类前声明线程类 classXXXThread；
+		3.线程中不要忘记 Q_OBJECT
+
 实例：
 class InsertThread : public QThread
 {
+	Q_OBJECT
 public:
     InsertThread(QDMTester* pParent)
     {
@@ -75,18 +80,16 @@ thread1->wait();	// 等待函数执行完成（也可不等待,继续其他操�
 class InsertThread : public QThread
 {
 	Q_OBJECT
-
-
 public:
 	InsertThread(void* pParam)
 		: m_pParam(pParam) 
 	{
-		m_runing = true;
+		m_bRuning = true;
 	}
 
 	void run() override
 	{
-		while (m_runing)
+		while (m_bRuning)
 		{
 			// m_pParam在此处转换成指定类型指针
 
@@ -100,13 +103,13 @@ protected:
 	{
 		if (event->type() == QEvent::User + 1)  //根据事件类型做处理 
 		{
-			m_runing = false;//退出线程
+			m_bRuning = false;//退出线程
 			return true;
 		}
 		return QThread::event(event);
 	}
 private:
-	bool  m_runing；
+	bool  m_bRuning；
 	void* m_pParam;
 }
 
@@ -121,7 +124,7 @@ public:
     QuitEvent() : QEvent(QEvent::User + 1) {} // 假设退出事件的类型为 User + 1
 };
 QuitEvent *quitEvent = new QuitEvent();
-QCoreApplication::postEvent(&thread, quitEvent);
+QCoreApplication::postEvent(thread1, quitEvent);
 
 
 ================================================================

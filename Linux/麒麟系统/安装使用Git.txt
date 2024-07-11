@@ -1,0 +1,20 @@
+
+1.安装 Git：如果系统中尚未安装 Git，可以使用包管理器进行安装。
+在麒麟系统中，可以使用命令安装 Git： 
+sudo apt-get install git
+
+2.配置 Git：安装完成后，需要配置 Git 的用户名和电子邮件地址。
+可以使用以下命令进行配置： 
+git config --global user.name "Your Name" 
+git config --global user.email "you@example.com"
+
+3.克隆仓库
+git clone <git地址>
+
+3.创建 Git 仓库：在需要进行版本控制的项目目录下，使用以下命令创建 Git 仓库： 
+git init
+
+4.添加文件到 Git：使用以下命令将需要跟踪的文件添加到 Git 仓库： 
+git add <file>
+
+5.提交更改：使用以下命令提交更改： git commit -m "Commit message"
