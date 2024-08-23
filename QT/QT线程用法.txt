@@ -1,7 +1,4 @@
 
-#include <QFuture>
-#include <QtConcurrent/QtConcurrent>
-#include <QMutex>
 #include <QThread>
 #include <QRunnable>
 #include <QThreadPool>
@@ -10,7 +7,11 @@
 方式1: 将共享资源以参数形式传入全局函数,通过QtConcurrent::run后台运行
 
 实例：
-bool g_work = true；
+#include <QFuture>
+#include <QtConcurrent/QtConcurrent>
+#include <QMutex>
+
+bool g_work = true;
 void threadFunInsert(IDBC* pDBObject)
 {
     if (pDBObject && g_work)

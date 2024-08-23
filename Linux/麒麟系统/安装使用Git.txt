@@ -17,4 +17,12 @@ git init
 4.添加文件到 Git：使用以下命令将需要跟踪的文件添加到 Git 仓库： 
 git add <file>
 
-5.提交更改：使用以下命令提交更改： git commit -m "Commit message"
+5.提交更改：
+	git commit -a   				//提交当前所有修改到本地仓库，后续使用git push 提交到远端仓库
+	
+	git add .
+	git commit -m "必须的注释"		//两条指令组合，表示只提交当前文件夹的修改内容（包括添加的文件），后续使用git push 提交到远端仓库
+	
+6.还原修改
+	git reset --hard <commit-hash>	//‌其中<commit-hash>是目标提交的哈希值,可指定某一个时间节点
+	
