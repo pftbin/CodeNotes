@@ -78,54 +78,89 @@ thread1->wait();	// 等待函数执行完成（也可不等待,继续其他操�
 
 方式2：支持线程接收外部事件（消息）
 
-class InsertThread : public QThread
+#define CMD_UPDATEUI        1000
+#define MSG_QUITTHREAD_TAKECMD  (QEvent::User+CMD_UPDATEUI)
+class TakeCMDThread : public QThread
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	InsertThread(void* pParam)
-		: m_pParam(pParam) 
-	{
-		m_bRuning = true;
-	}
+    TakeCMDThread(QPgmDeviceWidget* pParent)
+    {
+        m_bRuning = true;
+        m_pParent = pParent;
+    }
 
-	void run() override
-	{
-		while (m_bRuning)
-		{
-			// m_pParam在此处转换成指定类型指针
+public:
+    void run() override
+    {
+        while (m_bRuning)
+        {
+            if (!m_pParent) break;
+            if (m_pParent->TakeDrawCMD())
+                emit RunDrawCMD();
 
-			// 检查收到的事件
-			QCoreApplication::processEvents();
-		}
-	}
+            // 检查收到的事件
+            QCoreApplication::processEvents();
+            QThread::msleep(1);
+        }
+    }
+
+signals:
+    void RunDrawCMD();
 
 protected:
-	bool event(QEvent* event) override
-	{
-		if (event->type() == QEvent::User + 1)  //根据事件类型做处理 
-		{
-			m_bRuning = false;//退出线程
-			return true;
-		}
-		return QThread::event(event);
-	}
+    bool event(QEvent* event) override
+    {
+        if (event->type() == QEvent::User+CMD_UPDATEUI)
+        {
+            m_bRuning = false;//退出线程
+            return true;
+        }
+        return QThread::event(event);
+    }
+
 private:
-	bool  m_bRuning；
-	void* m_pParam;
-}
+    bool m_bRuning;
+    QPgmDeviceWidget* m_pParent;
+};
 
-QThread* thread1 = new InsertThread(this);
-thread1->start();
+TakeCMDThread* m_hThreadTakeCMD = new TakeCMDThread(this); //线程类指针类型必须是TakeCMDThread才能进行信号连接
+connect(m_hThreadTakeCMD, &TakeCMDThread::RunDrawCMD, this, &QPgmDeviceWidget::onRunDrawCommand);
+m_hThreadTakeCMD->start();
 
 
-// 自定义退出事件类
-class QuitEvent : public QEvent
+// 自定义QEvent事件
+class AsyncEvent : public QEvent
 {
 public:
-    QuitEvent() : QEvent(QEvent::User + 1) {} // 假设退出事件的类型为 User + 1
+    AsyncEvent(int type, quintptr wp = 0, quintptr lp = 0)
+        : QEvent(static_cast<QEvent::Type>(type))
+        , wParam(wp)
+        , lParam(lp)
+    {
+    }
+    AsyncEvent(unsigned int type, quintptr wp = 0, quintptr lp = 0)
+        : QEvent(static_cast<QEvent::Type>(type))
+        , wParam(wp)
+        , lParam(lp)
+    {
+    }
+    AsyncEvent(QEvent::Type type, quintptr wp = 0, quintptr lp = 0)
+        : QEvent(static_cast<QEvent::Type>(type))
+        , wParam(wp)
+        , lParam(lp)
+    {
+    }
+
+public:
+    quintptr   wParam;
+    quintptr   lParam;
 };
-QuitEvent *quitEvent = new QuitEvent();
-QCoreApplication::postEvent(thread1, quitEvent);
+#define NEWEVENT(type,wp,lp)   (new AsyncEvent(type,wp,lp))
+
+QCoreApplication::postEvent(m_hThreadTakeCMD, NEWEVENT(MSG_QUITTHREAD_TAKECMD, (quintptr)0, (quintptr)0));
+m_hThreadTakeCMD = NULL;
+
 
 
 ================================================================
