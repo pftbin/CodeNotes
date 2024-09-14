@@ -1,0 +1,16 @@
+1.如果用自己编的openssl, 先设置几个环境变量：
+export CFLAGS=-I/home/baiyin/lib/openssl/include
+export LDFLAGS=-L/home/baiyin/lib/openssl/lib64
+
+2.配置
+./configure  --prefix=/home/baiyin/lib/libevent  
+
+//不构建共享库【默认：MSVC只构建动态库；其他编译器动态+静态都构建】
+--disable-shared
+
+//OpenSSL加密【默认：开启，关闭需添加此选项】
+--disable-openssl
+
+3.编译构建
+make -j 4
+make install
