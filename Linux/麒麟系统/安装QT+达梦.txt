@@ -10,7 +10,12 @@ QT============================================================================
 	sudo apt-get install gdb
 	注：仍遇到错误可尝试执行以下指令
 	sudo apt-get install build-essential
-
+	
+	
+4.下载在线安装程序（qt-online-installer-平台.xxx）安装QT，如需安装指定版本，选中archive进行筛选即可
+下载地址：(任选其一)
+https://mirrors.aliyun.com/qt/archive/online_installers/4.8/?spm=a2c6h.25603864.0.0.3de143c41CDUiK
+https://download.qt.io/archive/qt/
 
 达梦===========================================================================
 

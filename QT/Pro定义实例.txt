@@ -1,0 +1,81 @@
+========管理多个项目的pro文件
+
+TEMPLATE = subdirs
+SUBDIRS += \
+    QDBC \
+    QLog \
+    XWSock \
+    TaskHandler \
+    TaskManager \
+    FtpClient \
+    FtpServer
+	
+	
+========单个pro文件
+QT -= gui
+QT += xml
+QT += widgets
+QT += network
+QT += sql
+
+
+TEMPLATE = lib
+DEFINES += QDBC_LIBRARY
+
+CONFIG += c++17 plugin
+
+# You can make your code fail to compile if it uses deprecated APIs.
+# In order to do so, uncomment the following line.
+#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+
+
+####<<<<<<<<<<<<<<<<<<手动添加内容<<<<<<<<<<<<<<<<<<<<<<<<<
+# 获取Qt版本号
+QT_VERSION = $$QT_VERSION
+greaterThan(QT_VERSION, 6.6.3): QMAKE_CXXFLAGS += -Wno-unused-parameter
+
+#定义构建目录
+build_dir = $$PWD/../bin
+#配置构建目录
+DESTDIR = $$build_dir/bin
+OBJECTS_DIR = $$build_dir/$$TARGET/obj
+MOC_DIR = $$build_dir/$$TARGET/moc
+RCC_DIR = $$build_dir/$$TARGET/rcc
+
+#LOG
+INCLUDEPATH += $$PWD/../QLog
+LIBS += -L$$build_dir/bin -lQLog
+#only for unix
+QMAKE_LFLAGS += -Wl,-rpath,$$DESTDIR
+
+
+#添加头文件目录
+INCLUDEPATH +=$$PWD/../public
+INCLUDEPATH +=$$PWD/../public/widget
+
+SOURCES += \
+    ../public/QConvertHelper.cpp \
+    ../public/QJsonHelper.cpp \
+    DBC.cpp \
+    QDBC.cpp \
+    QDBObject.cpp
+
+HEADERS += \
+    ../public/QConvertHelper.h \
+    ../public/QJsonHelper.h \
+    ../public/AirBaseDefine.h \
+    ../public/atom.h \
+    DBC.h \
+    IDBC.h \
+    QDBC_global.h \
+    QDBC.h \
+    QDBObject.h
+
+####>>>>>>>>>>>>>>>>>>>>>手动添加内容>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+# Default rules for deployment.
+unix {
+    target.path = /usr/lib
+}
+!isEmpty(target.path): INSTALLS += target

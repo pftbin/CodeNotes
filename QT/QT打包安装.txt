@@ -1,0 +1,59 @@
+使用linuxdeployqt在linux下进行Qt打包发布
+
+========linuxdeployqt安装
+
+1. 下载linuxdeployqt
+下载地址：​https://github.com/probonopd/linuxdeployqt/releases​
+
+2. 安装linuxdeployqt
+
+为了后面使用方便一点，把名字改短点：
+mv ./linuxdeployqt-continuous-x86_64.AppImage ./linuxdeployqt
+
+修改为可执行权限
+chmod 777 linuxdeployqt
+
+把这个可执行文件放到/usr/local/bin目录
+sudo mv linuxdeployqt /usr/local/bin
+
+测试是否安装成功 （输出版本信息，表示安装成功）
+linuxdeployqt --version
+
+
+
+========Qt库环境变量设置
+
+1.打开.bashrc文件
+vim ~/.bashrc
+
+2.在.bashrc文件末尾，追加内容如下：（其中/opt/Qt5.13.0/5.13.0为Qt的安装路径）
+
+#add qt env
+export PATH=/opt/Qt5.13.0/5.13.0/gcc_64/bin:$PATH
+export LIB_PATH=/opt/Qt5.13.0/5.13.0/gcc_64/lib:$LIB_PATH
+export PLUGIN_PATH=/opt/Qt5.13.0/5.13.0/gcc_64/plugins:$PLUGIN_PATH
+export QML2_PATH=/opt/Qt5.13.0/5.13.0/gcc_64/qml:$QML2_PATH
+
+3.使用source命令让文件立即生效。
+source ~/.bashrc
+
+4.测试环境变量是否设置正确：（输出qmake的版本号，则表示设置成功）
+qmake -v
+
+
+========使用linuxdeployqt打包程序
+
+1.将自己构建的库文件及可执行程序放到单独文件夹
+比如：Test是可执行程序名、依赖MyLib1、MyLib2
+
+2.执行打包指令
+linuxdeployqt Test -appimage （打包过程中无错误的话，最终会生成AppRun的执行程序）
+
+3.为了添加自定义库搜索路径，需构建run.sh脚本，
+vi run.sh 
+chmod 777 run.sh
+
+脚本内容如下：
+#!/bin/bash
+export LD_LIBRARY_PATH=$PWD/lib:$LD_LIBRARY_PATH
+./AppRun

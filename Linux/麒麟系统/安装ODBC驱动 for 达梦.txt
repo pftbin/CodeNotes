@@ -1,6 +1,6 @@
 1.安装ODBC驱动（需切换到root用户，否则运行指令无反应）
 	a:  下载  	https://www.unixodbc.org/unixODBC-2.3.12.tar.gz 
-	b:  配置 	./configure --enable-gui=no
+	b:  配置 	./configure
 	c： 构建	make && make install
 	d:  查看配置文件位置：	odbcinst -j
 	
