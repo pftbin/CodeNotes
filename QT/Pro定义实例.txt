@@ -35,7 +35,9 @@ QT_VERSION = $$QT_VERSION
 greaterThan(QT_VERSION, 6.6.3): QMAKE_CXXFLAGS += -Wno-unused-parameter
 
 # 将函数返回类型不匹配视为错误,避免Release版本崩溃
-QMAKE_CXXFLAGS += -Werror=return-type
+unix {
+    QMAKE_CXXFLAGS += -Werror=return-type
+}
 
 #定义构建目录
 build_dir = $$PWD/../bin
