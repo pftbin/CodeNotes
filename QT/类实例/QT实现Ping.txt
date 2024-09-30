@@ -1,0 +1,40 @@
+#include <QCoreApplication>
+#include <QProcess>
+#include <QDebug>
+
+bool PingIP(const QString &ip) {
+    QProcess cmd;
+
+#ifdef Q_OS_WIN
+
+    cmd.start("ping", QStringList() << ip << "-n" << "1" << "-w" << "1000"); // 尝试使用命令和参数列表
+    if (!cmd.waitForStarted()) {
+        qDebug() << "Failed to start process:" << cmd.errorString();
+        return false;
+    }
+    cmd.waitForFinished(); // 等待进程完成
+
+#else
+
+    cmd.start("ping", QStringList() << "-c" << "1" << ip); // 尝试使用命令和参数列表
+    if (!cmd.waitForStarted()) {
+        qDebug() << "Failed to start process:" << cmd.errorString();
+        return false;
+    }
+    cmd.waitForFinished(); // 等待进程完成
+
+#endif
+
+    QString stdoutOutput = QString::fromUtf8(cmd.readAllStandardOutput());
+    qDebug() << "STDOUT:" << stdoutOutput;
+    if (stdoutOutput.indexOf("TTL", 0, Qt::CaseInsensitive) == -1)
+    {
+        qDebug() << ip << "ping Failed (no TTL in output)";
+        return false;
+    } else {
+        qDebug() << ip << "ping Ok";
+        return true;
+    }
+
+    return false;
+}
