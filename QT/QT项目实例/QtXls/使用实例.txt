@@ -1,0 +1,79 @@
+
+===pro文件定义
+#xlsx
+INCLUDEPATH += $$PWD/../xlsx
+LIBS += -L$$build_dir/bin -lQtXlsx
+#only for unix
+QMAKE_LFLAGS += -Wl,-rpath,$$DESTDIR
+
+
+===Cpp
+
+#include <../xlsx/QtXlsx>
+#define  XLS_START_ROW  (1)
+#define  XLS_START_COL  (1)
+
+bool CExportData::ExportDataPlaylist(std::vector<PLAYLISTBASEINFO> vct_plsts,QString strFile)
+{
+    // 创建一个xlsx文档
+    QXlsx::Document doc;
+
+    // 添加一个工作表
+    if (doc.addSheet("Sheet1") && doc.selectSheet("Sheet1"))
+    {
+        QXlsx::Worksheet *sheet1 = doc.currentWorksheet();
+        if (sheet1)
+        {
+            // 在工作表中写入数据(line 1)
+            for (int i = 0; i < strPlstTitles.size(); i++)
+            {
+                sheet1->write(XLS_START_ROW, XLS_START_COL+i, strPlstTitles[i]);
+            }
+
+            // 在工作表中写入数据(data)
+            QString strItem;
+            for (int j = 0; j < vct_plsts.size(); j++)
+            {
+                PLAYLISTBASEINFO item = vct_plsts[j];
+
+                strItem = item.strPlaylistName;
+                sheet1->write(XLS_START_ROW+1+j, XLS_START_COL+0, strItem);
+
+                strItem = item.strColumnName;
+                sheet1->write(XLS_START_ROW+1+j, XLS_START_COL+1, strItem);
+
+                strItem = item.strStudio;
+                sheet1->write(XLS_START_ROW+1+j, XLS_START_COL+2, strItem);
+
+                strItem = GetStrFromDateTime(item.tmCreate);
+                sheet1->write(XLS_START_ROW+1+j, XLS_START_COL+3, strItem);
+
+                strItem = GetStrFromDateTime(item.tmFirst);
+                sheet1->write(XLS_START_ROW+1+j, XLS_START_COL+4, strItem);
+
+                strItem = QString::number(item.nPlaylistID);
+                sheet1->write(XLS_START_ROW+1+j, XLS_START_COL+5, strItem);
+
+                strItem = item.strPlaylistID;
+                sheet1->write(XLS_START_ROW+1+j, XLS_START_COL+6, strItem);
+
+                if(NULL != m_pParent)
+                {
+                    int nPos = ((j + 1) * 100) / vct_plsts.size();
+                    QCoreApplication::postEvent(m_pParent, NEWEVENT(MSG_PROGRESSDEAL, (quintptr)0, (quintptr)nPos));
+                }
+            }
+        }
+    }
+
+    // 保存文档到文件
+    if (!doc.saveAs(strFile)) {
+        qDebug() << "Failed to save the document: " << strFile;
+
+        QString* pMsg = new QString("导出文件失败...");
+        QCoreApplication::postEvent(m_pParent, NEWEVENT(MSG_MSGBOXNOTE, (quintptr)0, (quintptr)pMsg));
+        return false;
+    }
+
+    return true;
+}

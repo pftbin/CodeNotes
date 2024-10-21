@@ -1,0 +1,8 @@
+#include "xlsxdocument.h"
+#include "xlsxformat.h"
+#include "xlsxworksheet.h"
+#include "xlsxcell.h"
+#include "xlsxcellrange.h"
+#include "xlsxcellformula.h"
+
+QTXLSX_USE_NAMESPACE
