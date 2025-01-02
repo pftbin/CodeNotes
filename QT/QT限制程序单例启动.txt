@@ -1,0 +1,40 @@
+#include <QApplication>
+#include <QSharedMemory>
+#include <QSystemSemaphore>
+
+int main(int argc, char *argv[])
+{
+    //限制程序单个实例启动
+#if 1
+    // 定义共享内存的键
+    const QString sharedMemoryKey = "SharedMemoryKey_SBStudioManageMaster";
+    // 使用系统信号量来确保共享内存的创建是线程安全的
+    QSystemSemaphore semaphore(sharedMemoryKey, 1);
+    semaphore.acquire();
+    // 创建共享内存
+    QSharedMemory sharedMemory(sharedMemoryKey);
+    if (!sharedMemory.create(1)) {
+        // 如果共享内存已经存在，尝试清理
+        if (sharedMemory.attach()) {
+            sharedMemory.detach();
+            // 再次尝试创建共享内存
+            if (!sharedMemory.create(1)) {
+                qDebug() << "程序已经在运行，无法启动新实例。";
+                semaphore.release();
+                return 1;
+            }
+        } else {
+            qDebug() << "程序已经在运行，无法启动新实例。";
+            semaphore.release();
+            return 1;
+        }
+    }
+    // 释放信号量
+    semaphore.release();
+    qDebug() << "程序启动成功。";
+#endif
+
+......
+
+
+}
