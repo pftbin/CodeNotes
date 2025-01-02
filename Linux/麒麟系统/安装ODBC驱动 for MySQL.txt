@@ -63,6 +63,7 @@
 实例： 必须sudo执行,否则会报错 Invalid Path 或 General installer error
 	
 	注册驱动：		sudo ./myodbc-installer -a -d -n "MYSQL ODBC Driver" -t "Driver=/home/playout/odbc_mysql/lib/libmyodbc8w.so"
-	新增DSN数据源：	sudo ./myodbc-installer -s -a  -c2  -n "netdb_moc" -t "Driver=MYSQL ODBC Driver; SERVER=172.16.167.10:3306;DATABASE=netdb_moc;UID=root;PWD=root"	
+	新增DSN数据源：	sudo ./myodbc-installer -s -a  -c2  -n "netdb_moc" -t "Driver=MYSQL ODBC Driver; SERVER=172.16.167.10:3306;DATABASE=netdb_moc;UID=root;PWD=root"
+	
 
 
